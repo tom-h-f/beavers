@@ -1,0 +1,14 @@
+[workspace]
+members = [
+  "crates/core",
+  "crates/envs",
+  "crates/agents",
+  "crates/sim",
+  "crates/cli",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+authors = ["Tom French"]
