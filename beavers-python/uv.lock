@@ -23,12 +23,12 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "gridworld", editable = "lib/enviroments/gridworld" }]
+requires-dist = [{ name = "gridworld", editable = "lib/environment/gridworld" }]
 
 [[package]]
 name = "gridworld"
 version = "0.1.0"
-source = { editable = "lib/enviroments/gridworld" }
+source = { editable = "lib/environment/gridworld" }
 dependencies = [
     { name = "numpy" },
 ]

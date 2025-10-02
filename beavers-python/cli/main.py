@@ -1,8 +1,8 @@
-from gridworld.enviroment import Enviroment
+from gridworld.environment import Environment
 
 
 def main():
-    env = Enviroment()
+    env = Environment()
     env.generate_world()
 
 

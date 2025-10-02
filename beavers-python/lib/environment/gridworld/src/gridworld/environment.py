@@ -2,7 +2,7 @@ import numpy as np
 import random
 
 
-class Enviroment:
+class Environment:
     def __init__(self, width: int = 128, height: int = 128):
         self.width = width
         self.height = width
