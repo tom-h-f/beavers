@@ -2,52 +2,6 @@ version = 1
 revision = 3
 requires-python = ">=3.13"
 
-[manifest]
-members = [
-    "beavers",
-    "cli",
-    "core",
-    "gridworld",
-    "render",
-    "sim",
-]
-
-[[package]]
-name = "beavers"
-version = "0.1.0"
-source = { virtual = "." }
-
-[[package]]
-name = "cli"
-version = "0.1.0"
-source = { virtual = "cli" }
-dependencies = [
-    { name = "sim" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "sim", editable = "lib/sim" }]
-
-[[package]]
-name = "core"
-version = "0.1.0"
-source = { editable = "lib/core" }
-
-[[package]]
-name = "gridworld"
-version = "0.1.0"
-source = { editable = "lib/environment/gridworld" }
-dependencies = [
-    { name = "core" },
-    { name = "numpy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "core", editable = "lib/core" },
-    { name = "numpy", specifier = ">=2.3.3" },
-]
-
 [[package]]
 name = "numpy"
 version = "2.3.3"
@@ -116,35 +70,16 @@ wheels = [
 ]
 
 [[package]]
-name = "render"
+name = "scratchpad"
 version = "0.1.0"
-source = { editable = "lib/render" }
+source = { virtual = "." }
 dependencies = [
-    { name = "core" },
-    { name = "gridworld" },
+    { name = "numpy" },
     { name = "pygame" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "core", editable = "lib/core" },
-    { name = "gridworld", editable = "lib/environment/gridworld" },
+    { name = "numpy", specifier = ">=2.3.3" },
     { name = "pygame", specifier = ">=2.6.1" },
-]
-
-[[package]]
-name = "sim"
-version = "0.1.0"
-source = { editable = "lib/sim" }
-dependencies = [
-    { name = "core" },
-    { name = "gridworld" },
-    { name = "render" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "core", editable = "lib/core" },
-    { name = "gridworld", editable = "lib/environment/gridworld" },
-    { name = "render", editable = "lib/render" },
 ]

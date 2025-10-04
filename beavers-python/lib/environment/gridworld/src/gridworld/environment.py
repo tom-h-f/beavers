@@ -1,20 +1,26 @@
 import numpy as np
 import random
+from core.agent import Beaver
 
 
 class Environment:
     def __init__(self, width: int = 128, height: int = 128):
         self.width = width
-        self.height = width
+        self.height = height
+        self.agents = []
+
+    def add_agent(self, b: Beaver):
+        self.agents.append(b)
+        print(f"New agent spawned at [{b.x},{b.y}]")
 
     def generate_world(self):
         # TODO: This needs to become a actual, complicated world generation built for generating rivers.
-        # Also, we will need to randomly add trees, maybe in another array (this probs just has to be a seperate `terrain` class tbh)
         random.seed()
         ground_chance = 0.3
-        water_chance = 0.7
+        tree_chance = 0.1
+        water_chance = 0.6
         self.world_grid = np.random.choice(
-            [0, 1], size=(self.height, self.width), p=[ground_chance, water_chance]
+            [0, 1, 1.5],
+            size=(self.height, self.width),
+            p=[water_chance, ground_chance, tree_chance],
         )
-        print(f"Water Tile Count: {(self.world_grid == 1).sum()}")
-        print(f"Ground Tile Count: {(self.world_grid == 0).sum()}")

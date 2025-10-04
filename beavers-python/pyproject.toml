@@ -10,4 +10,7 @@ dependencies = []
 members = [
     "lib/environment/gridworld",
     "cli",
+    "lib/render",
+    "lib/core",
+    "lib/sim",
 ]

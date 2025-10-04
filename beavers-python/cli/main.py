@@ -1,9 +1,11 @@
-from gridworld.environment import Environment
+import sim
 
 
 def main():
-    env = Environment()
-    env.generate_world()
+    width = 32
+    height = 32
+    s = sim.Simulator(width, height)
+    s.run()
 
 
 if __name__ == "__main__":
