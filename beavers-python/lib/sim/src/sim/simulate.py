@@ -12,16 +12,10 @@ class Simulator():
         self.env.add_agent(Beaver(self.grid_width / 2, self.grid_height / 2))
         random.seed()
 
-    def step(self):
-        self.env.agents[0].x = random.randrange(0, self.grid_width, 1)
-        self.env.agents[0].y = random.randrange(0, self.grid_height, 1)
-        pass
-
     def run(self):
         self.env.generate_world()
         gpu = render.PygameRenderer(self.grid_width, self.grid_height)
 
         while True:
-            print("go")
-            self.step()
+            self.env.step()
             gpu.render(self.env)
