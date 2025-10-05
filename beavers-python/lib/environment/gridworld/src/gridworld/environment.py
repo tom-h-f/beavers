@@ -1,4 +1,5 @@
 import numpy as np
+import math
 import random
 from core.agent import Beaver
 from core.agent import Action, ActionType
@@ -12,6 +13,15 @@ class Environment:
         self.width = width
         self.height = height
         self.agents = []
+        for _ in range(0, 100):
+            self.add_agent(
+                Beaver(
+                    math.floor(self.width / random.randrange(1, 5, 1)),
+                    math.floor(self.height / random.randrange(1, 5, 1)),
+                )
+            )
+        random.seed()
+        self.generate_world()
 
     def add_agent(self, b: Beaver):
         self.agents.append(b)
@@ -37,8 +47,7 @@ class Environment:
                 act = b.get_action(self)
                 # TODO should the fact it is not valid be passed
                 # to the reward function? idk
-                if (act.type == ActionType.Move
-                        and not self.agent_move_is_valid(b, act)):
+                if act.type == ActionType.Move and not self.agent_move_is_valid(b, act):
                     continue
 
                 reward = calculate_reward(b, act)
