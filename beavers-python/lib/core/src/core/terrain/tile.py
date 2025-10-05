@@ -1,5 +1,5 @@
 # No. of pixels per tile
-TILE_SIZE_PX = 4*4
+TILE_SIZE_PX = 8
 
 
 class Tile:

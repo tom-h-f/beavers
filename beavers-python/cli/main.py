@@ -1,11 +1,21 @@
 import sim
+import sys
+
+
+
+
 
 
 def main():
-    width = 32
-    height = 32
+    width = 128
+    height = 128
     s = sim.Simulator(width, height)
-    s.run()
+    running = True
+    try:
+        s.run(running)
+    except KeyboardInterrupt:
+        print('Exiting...')
+
 
 
 if __name__ == "__main__":

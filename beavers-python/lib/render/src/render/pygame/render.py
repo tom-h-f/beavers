@@ -50,9 +50,16 @@ class PygameRenderer:
     def render(self, env):
         # TODO should the env get passed somewhere else rather than every render call?
         # TODO this while running loop should be what calls the render rather than inside of it
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_q:
+                    self.running = False
         self.draw_grid(env)
         pygame.display.flip()
         self.clock.tick(60)
+        return self.running
 
     def index_to_color(self, v):
         return self.COLOURS[v]

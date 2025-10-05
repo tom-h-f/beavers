@@ -1,6 +1,8 @@
 import numpy as np
 import random
 from core.agent import Beaver
+from core.agent import Action, ActionType
+from core.agent import calculate_reward
 from core.terrain.tile import Tile
 
 
@@ -14,12 +16,12 @@ class Environment:
         self.agents.append(b)
         print(f"New agent spawned at [{b.x},{b.y}]")
 
-    def agent_move_is_valid(self, b: Beaver, dx: int, dy: int):
-        proposed_x = int(b.x) + dx
-        proposed_y = int(b.y) + dy
+    def agent_move_is_valid(self, b: Beaver, action: Action):
+        proposed_x = int(b.x) + action.quantity.dx
+        proposed_y = int(b.y) + action.quantity.dy
         if proposed_x < 0 or proposed_y < 0:
             return False
-        if proposed_x > self.width or proposed_y > self.height:
+        if proposed_x >= self.width or proposed_y >= self.height:
             return False
 
         return self.world_grid[proposed_x][proposed_y] == Tile.GROUND
@@ -29,22 +31,16 @@ class Environment:
             if b.sleep_ticks_remaining > 0:
                 b.sleep_ticks_remaining -= 1
                 continue
-            decision = random.randrange(0, 3, 1)
-            match decision:
-                case 0:
-                    dx = random.randrange(-1, 2, 1)
-                    dy = random.randrange(-1, 2, 1)
-                    print(f"moving [{dx}, {dy}], now at [{b.x}, {b.y}]")
-                    if (self.agent_move_is_valid(b, dx, dy)):
-                        b.move(dx, dy)
-                        print(f"moved [{dx}, {dy}], now at [{b.x}, {b.y}]")
+            act = b.get_action(self)
+            # TODO should the fact it is not valid be passed
+            # to the reward function? idk
+            reward = calculate_reward(b, act)
+            if (act.type == ActionType.Move
+                    and not self.agent_move_is_valid(b, act)):
+                continue
 
-                case 1:
-                    print("eating")
-                    b.eat()
-                case 2:
-                    print("sleeping")
-                    b.sleep(random.randrange(0, 5, 1))
+            print(f"reward: {reward:02}\tenergy: {b.energy:02}")
+            b.do(act)
 
     def generate_world(self):
         # TODO: This needs to become a actual, complicated world generation built for generating rivers.

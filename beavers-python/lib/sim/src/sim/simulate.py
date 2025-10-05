@@ -2,6 +2,7 @@ from gridworld import Environment
 import render
 from core.agent import Beaver
 import random
+import math
 
 
 class Simulator():
@@ -9,13 +10,18 @@ class Simulator():
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.env = Environment(self.grid_width, self.grid_height)
-        self.env.add_agent(Beaver(self.grid_width / 2, self.grid_height / 2))
+        for i in range(0, 100):
+            self.env.add_agent(Beaver(
+                math.floor(
+                    self.grid_width / random.randrange(1, 5, 1)),
+                math.floor(self.grid_height / random.randrange(1, 5, 1))
+            ))
         random.seed()
 
-    def run(self):
+    def run(self, running):
         self.env.generate_world()
         gpu = render.PygameRenderer(self.grid_width, self.grid_height)
 
-        while True:
+        while running:
             self.env.step()
-            gpu.render(self.env)
+            running = gpu.render(self.env)
