@@ -1,28 +1,30 @@
-from .agent import Beaver
+from .agent import Beaver, AgentDied
 from .action import Action, ActionType
 
 
 class Reward:
     EXISTENCE_PENALTY = -0.05
-    alive = True
     value = 0
 
     def add(self, other: float):
         self.value += other
 
     def die(self):
-        self.alive = False
+        raise AgentDied
 
     def existence_penalty(self):
         self.add(self.EXISTENCE_PENALTY)
 
     def __format__(self, fmt):
-        alive_str = "Alive" if self.alive else "Dead"
-        return f"Reward({self.value}, {alive_str})"
+        return f"Reward({self.value})"
 
 
 def calculate_reward(state: Beaver, action: Action):
     reward = Reward()
+    import random
+    if random.randrange(0, 200, 1) == 1:
+        reward.die()
+        return
 
     if state.energy == 0:
         reward.die()

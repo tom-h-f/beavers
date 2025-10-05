@@ -46,3 +46,8 @@ class Beaver:
                 return Action(ActionType.Eat, 1)
             case 2:
                 return Action(ActionType.Sleep, random.randrange(0, 3, 1))
+
+
+class AgentDied(Exception):
+    """Raised when agent dies """
+    pass

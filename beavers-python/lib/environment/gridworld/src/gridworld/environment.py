@@ -3,6 +3,7 @@ import random
 from core.agent import Beaver
 from core.agent import Action, ActionType
 from core.agent import calculate_reward
+from core.agent import AgentDied
 from core.terrain.tile import Tile
 
 
@@ -27,20 +28,25 @@ class Environment:
         return self.world_grid[proposed_x][proposed_y] == Tile.GROUND
 
     def step(self):
+        # TODO: Add handling code for when 0 agents left
         for b in self.agents:
-            if b.sleep_ticks_remaining > 0:
-                b.sleep_ticks_remaining -= 1
-                continue
-            act = b.get_action(self)
-            # TODO should the fact it is not valid be passed
-            # to the reward function? idk
-            reward = calculate_reward(b, act)
-            if (act.type == ActionType.Move
-                    and not self.agent_move_is_valid(b, act)):
-                continue
+            try:
+                if b.sleep_ticks_remaining > 0:
+                    b.sleep_ticks_remaining -= 1
+                    continue
+                act = b.get_action(self)
+                # TODO should the fact it is not valid be passed
+                # to the reward function? idk
+                if (act.type == ActionType.Move
+                        and not self.agent_move_is_valid(b, act)):
+                    continue
 
-            print(f"reward: {reward:02}\tenergy: {b.energy:02}")
-            b.do(act)
+                reward = calculate_reward(b, act)
+                print(f"reward: {reward:02}\tenergy: {b.energy:02}")
+                b.do(act)
+            except AgentDied:
+                self.agents.remove(b)
+                continue
 
     def generate_world(self):
         # TODO: This needs to become a actual, complicated world generation built for generating rivers.
