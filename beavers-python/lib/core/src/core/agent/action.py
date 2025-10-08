@@ -34,6 +34,15 @@ class Action(IntEnum):
             case _:
                 raise ValueError("Invalid Action")
 
+    def how_many():
+        return len(Action)
+
+    def is_valid(self, b, grid):
+        if self.is_move() and not grid.agent_move_is_valid(b, self):
+            return False
+
+        return True
+
 
 @dataclass
 class BeaverStepInfo:

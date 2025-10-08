@@ -19,11 +19,11 @@ class PygameRenderer:
         pass
 
     def draw_grid(self, trainer):
-        rows, cols = trainer.env.world_grid.shape
+        rows, cols = trainer.env.grid.raw().shape
 
         for r in range(rows):
             for c in range(cols):
-                self.draw_tile(trainer.env.world_grid, r, c)
+                self.draw_tile(trainer.env.grid.raw(), r, c)
 
         self.draw_agents(trainer.get_beaver_list())
 

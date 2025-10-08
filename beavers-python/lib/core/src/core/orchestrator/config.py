@@ -1,0 +1,10 @@
+from core.environment import EnvironmentType
+
+
+class OrchestratorConfig:
+    number_of_agents: int = 3
+    number_of_episodes: int = 10
+    size: int = 16
+    render_enabled: bool = False
+    torch_device: str = "mps"
+    env_type: EnvironmentType = EnvironmentType.GridWorld

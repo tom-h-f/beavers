@@ -1,14 +1,13 @@
 import argparse
-from core import train
+from core.orchestrator import Orchestrator, OrchestratorConfig
 
 
 def main(count, render_enabled, episodes):
-    trainer = train.Trainer(
-        count=count, render_enabled=render_enabled, n_episodes=episodes
-    )
+    config = OrchestratorConfig()
+    o = Orchestrator(config)
 
     try:
-        trainer.training_loop()
+        o.train()
     except KeyboardInterrupt:
         print("Exiting...")
 

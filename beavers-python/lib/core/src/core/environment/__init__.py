@@ -1,1 +1,2 @@
-from .gridworld import *
+from .env_types import *
+
