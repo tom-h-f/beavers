@@ -1,5 +1,4 @@
 from core.agent import Beaver
-from core.agent.exceptions import AgentIsDead
 from .action import Action
 
 

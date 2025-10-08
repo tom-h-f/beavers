@@ -26,7 +26,7 @@ class Orchestrator:
             self.agents.append(DQNBeaver(self.network))
 
         self.runner = Runner(
-            config, self.agents, self.network, self.target_network)
+            config, self.agents, self.network, self.target_network, self.graphics)
 
     def train(self):
         self.runner.run(self.agents)

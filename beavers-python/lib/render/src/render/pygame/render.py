@@ -1,5 +1,6 @@
 import pygame
 from core.terrain.tile import Tile, TILE_SIZE_PX
+from core.agent.action import Action
 
 
 class PygameRenderer:
@@ -25,7 +26,7 @@ class PygameRenderer:
             for c in range(cols):
                 self.draw_tile(trainer.env.grid.raw(), r, c)
 
-        self.draw_agents(trainer.get_beaver_list())
+        self.draw_agents([a.beaver for a in trainer.agents])
 
     def draw_agents(self, agents):
         for a in agents:
@@ -45,7 +46,7 @@ class PygameRenderer:
             (y * TILE_SIZE_PX, x * TILE_SIZE_PX, TILE_SIZE_PX, TILE_SIZE_PX),
         )
 
-    def render(self, trainer):
+    def render(self, runner, action: Action):
         # TODO should the env get passed somewhere else rather than every render call?
         # TODO this while running loop should be what calls the render rather than inside of it
         for event in pygame.event.get():
@@ -54,7 +55,10 @@ class PygameRenderer:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_q:
                     self.running = False
-        self.draw_grid(trainer)
+        self.draw_grid(runner)
+        if action == Action.Eat:
+            # TODO render some text notifying user, also do this for sleep.
+
         pygame.display.flip()
         self.clock.tick(60)
         return self.running

@@ -16,9 +16,9 @@ from core.agent.action import BeaverStepInfo
 class Runner:
     epsilon = 0.6
     epsilon_min = 0.001
-    epsilon_decay = 0.990
+    epsilon_decay = 0.8
 
-    def __init__(self, config: OrchestratorConfig, agents, network, target_network):
+    def __init__(self, config: OrchestratorConfig, agents, network, target_network, graphics=None):
         self.torch_device = config.torch_device
         self.max_steps = config.batch_size * config.batch_size
         print("Max Steps: ", self.max_steps)
@@ -29,6 +29,7 @@ class Runner:
         self.trainer = Trainer(network, target_network, self.replay_buffer)
         self.number_of_episodes = config.number_of_episodes
         self.agents = agents
+        self.graphics = graphics
         self.reset_agents()
 
     def init_environment(self, config: OrchestratorConfig):
@@ -55,6 +56,8 @@ class Runner:
             while not self.is_episode_done(step_count):
                 for a in [x for x in agents if not x.done]:
                     exp = self.agent_step(a)
+                    if self.graphics is not None:
+                        self.graphics.render(self, exp.action)
                     self.replay_buffer.add(exp)
                     self.trainer.train_step(a)
                     if self.trainer.losses:
@@ -63,7 +66,7 @@ class Runner:
                 step_count += 1
             episode_losses.append(sum(episode_loss) /
                                   len(episode_loss) if episode_loss else 0)
-            print(episode_losses)
+            print("Final Loss: ", sum(episode_loss) / len(episode_loss))
             self.decay_epsilon()
         self.plot_losses(episode_losses)
 
