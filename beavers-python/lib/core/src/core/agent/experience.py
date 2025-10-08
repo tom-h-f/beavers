@@ -28,13 +28,13 @@ class ReplaySample:
 
 
 class ReplayBuffer:
-    def __init__(self, limit=0xFFFF):
+    def __init__(self, batch_size, limit=0xFFFF):
         self._list = deque()
+        self.batch_size = batch_size
         self.limit = limit
 
     def add(self, e: Experience):
         if self.len() >= self.limit:
-            old_len = self.len()
             self._list.popleft()
 
         self._list.append(e)
@@ -42,11 +42,12 @@ class ReplayBuffer:
     def len(self) -> int:
         return len(self._list)
 
-    def sample(self, batch_sz: int) -> ReplaySample:
-        if batch_sz > len(self._list):
-            batch_sz = len(self._list)
+    def sample(self) -> ReplaySample:
+        if self.batch_size > len(self._list):
+            self.batch_size = len(self._list)
 
-        candidates = random.sample(self._list, min(batch_sz, self.len()))
+        candidates = random.sample(
+            self._list, min(self.batch_size, self.len()))
 
         # Need to convert each element in an experience
         # so its ready to be used

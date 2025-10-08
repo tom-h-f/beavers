@@ -1,4 +1,5 @@
 from typing import List
+import matplotlib.pyplot as plt
 
 import core.environment.gridworld as gridworld
 
@@ -16,13 +17,14 @@ class Runner:
     epsilon = 0.6
     epsilon_min = 0.001
     epsilon_decay = 0.990
-    max_steps = 0xFFF
 
     def __init__(self, config: OrchestratorConfig, agents, network, target_network):
         self.torch_device = config.torch_device
+        self.max_steps = config.batch_size * config.batch_size
+        print("Max Steps: ", self.max_steps)
 
         self.init_environment(config)
-        self.replay_buffer = ReplayBuffer()
+        self.replay_buffer = ReplayBuffer(config.batch_size)
 
         self.trainer = Trainer(network, target_network, self.replay_buffer)
         self.number_of_episodes = config.number_of_episodes
@@ -41,20 +43,29 @@ class Runner:
         for a in self.agents:
             a.beaver.x, a.beaver.y = self.env.grid.get_random_tile_of_type(
                 Tile.GROUND)
-            print(a.beaver.x, a.beaver.y)
+            a.beaver.energy = 100
 
     def run(self, agents: List[DQNBeaver]):
+        episode_losses = []
         for i in range(self.number_of_episodes):
             print(f"\nRunning episode {i} - e={self.epsilon}")
+            self.reset_agents()
             step_count = 0
+            episode_loss = []
             while not self.is_episode_done(step_count):
                 for a in [x for x in agents if not x.done]:
                     exp = self.agent_step(a)
                     self.replay_buffer.add(exp)
                     self.trainer.train_step(a)
+                    if self.trainer.losses:
+                        episode_loss.append(self.trainer.losses[-1])
 
                 step_count += 1
+            episode_losses.append(sum(episode_loss) /
+                                  len(episode_loss) if episode_loss else 0)
+            print(episode_losses)
             self.decay_epsilon()
+        self.plot_losses(episode_losses)
 
     def agent_step(self, a: DQNBeaver) -> Experience:
         observation = self.observe(a)
@@ -84,3 +95,11 @@ class Runner:
 
     def alive_agents(self) -> List[DQNBeaver]:
         return [x for x in self.agents if not x.done]
+
+    def plot_losses(self, episode_losses):
+        plt.figure(figsize=(10, 5))
+        plt.plot(range(len(episode_losses)), episode_losses)
+        plt.xlabel('Episode')
+        plt.ylabel('Average Loss')
+        plt.title('Loss over Episodes')
+        plt.savefig("loss.png")

@@ -2,8 +2,13 @@ import argparse
 from core.orchestrator import Orchestrator, OrchestratorConfig
 
 
-def main(count, render_enabled, episodes):
+def main(args):
     config = OrchestratorConfig()
+    config.number_of_agents = args.count
+    config.number_of_episodes = args.episodes
+    config.render_enabled = args.render
+    config.batch_size = args.batch_size
+    print(config)
     o = Orchestrator(config)
 
     try:
@@ -25,11 +30,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--episodes",
         type=int,
-        default=100,
+        default=10,
         help="Number of episodes to run",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=64,
+        help="Batch Size for training purposes",
     )
     parser.add_argument(
         "--render", action="store_true", help="Show the pygame render window"
     )
     args = parser.parse_args()
-    main(args.count, args.render, args.episodes)
+    main(args)

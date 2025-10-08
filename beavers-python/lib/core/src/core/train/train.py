@@ -18,9 +18,10 @@ class Trainer:
         self.optimiser = torch.optim.SGD(
             self.network.parameters(), self.learning_rate
         )
+        self.losses = []
 
     def train_step(self, a: DQNBeaver):
-        sample = self.replay_buffer.sample(16)
+        sample = self.replay_buffer.sample()
         q_values = self.network(sample.states)
         # shape: [batch_sz, n_actions]
         # i need to index for whatever batch i was using,
@@ -40,7 +41,9 @@ class Trainer:
 
             target_q = sample.rewards + self.gamma * \
                 selected_q * (sample.dones.float())
+
         loss = self.loss(computed_q, target_q)
+        self.losses.append(loss.item())
         print(f"loss={loss}", end="\r")
         self.optimiser.zero_grad()
 
