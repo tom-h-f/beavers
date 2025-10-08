@@ -1,7 +1,7 @@
 import random
 import numpy as np
 import render
-import core.environment as enviroment
+import core.environment.gridworld as enviroment
 from core.agent.dqn import DQNBeaver
 from core.agent.exceptions import AgentMoveNotValid
 from core.terrain.tile import Tile
@@ -17,30 +17,18 @@ class Trainer:
         self.height = 32
         self.observation_shape = (3, self.height, self.width)
         self.render_enabled = render_enabled
-        self.env = enviroment.Environment(self.width, self.height, agent_cnt=count)
+        self.env = enviroment.Environment(
+            self.width, self.height, agent_cnt=count)
         self.agents = []
         self.n_episodes = n_episodes
         if render_enabled:
             self.gpu = render.PygameRenderer(self.width, self.height)
 
-        random.seed()
-        for _ in range(0, count):
-            # FIXME:: move this random placement to an env method, call from env.reset
-            # and let the trainer pass in the agent list, modify their coords
-            ground_y, ground_x = np.where(self.env.world_grid == Tile.GROUND)
-
-            # choose one at random
-            idx = np.random.choice(len(ground_x))
-            rand_x, rand_y = ground_x[idx], ground_y[idx]
-
+        for _ in range(0, 3):
+            x, y = self.env.grid.get_random_pos_of_tile_type(Tile.GROUND)
+            print(f"X = {x} Y = {y}")
             self.agents.append(
-                DQNBeaver(
-                    self.observation_shape,
-                    self.n_actions,
-                    spawn_x=rand_x,
-                    spawn_y=rand_y,
-                )
-            )
+                DQNBeaver(self.observation_shape, self.n_actions, x, y))
 
     def training_loop(self):
         epsilon = 1
@@ -71,7 +59,8 @@ class Trainer:
                     episode_done = True
 
                 for a in [x for x in self.agents if not x.done]:
-                    obs = self.env.get_observation(self.agents, a, device=self.device)
+                    obs = self.env.get_observation(
+                        self.agents, a, device=self.device)
                     action, q_value = a.select_action(obs, epsilon)
                     # print(f"{a.id}=>{action.name:10}")
 
@@ -86,10 +75,11 @@ class Trainer:
 
                     a.replay_buffer.add(exp)
 
-                    a.train_step(exp, q_value)
+                    a.train_step(exp, q_value, 0)
 
                     if exp.done:
-                        print(f"!!!BEAVER DEATH!!! [{a.id}] energy={a.beaver.energy}")
+                        print(f"!!!BEAVER DEATH!!! [{a.id}] energy={
+                              a.beaver.energy}")
                         a.done = True
             if self.render_enabled:
                 import time
