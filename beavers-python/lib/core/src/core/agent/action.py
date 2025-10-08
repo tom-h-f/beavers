@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntEnum
+import random
 
 
 @dataclass
@@ -8,33 +9,33 @@ class MoveQuantity:
     dy: int
 
 
-class Actions(Enum):
-    RIGHT: 0
-    UP_RIGHT: 1
-    UP: 2
-    UP_LEFT: 3
-    LEFT: 4
-    DOWN_LEFT: 5
-    DOWN: 6
-    DOWN_RIGHT: 7
-    STAY_STILL: 8
-    EAT: 9
-    SLEEP: 10
+class Action(IntEnum):
+    MoveRight = 0
+    MoveUp = 1
+    MoveLeft = 2
+    MoveDown = 3
+    Eat = 4
+    Sleep = 5
+
+    def is_move(self) -> bool:
+        return int(self) < Action.Eat
+
+    def random_action():
+        return Action(random.randrange(0, 6))
+
+    def to_type_str(self) -> str:
+        if self.is_move():
+            return "move"
+        match self:
+            case Action.Eat:
+                return "eat"
+            case Action.Sleep:
+                return "sleep"
+            case _:
+                raise ValueError("Invalid Action")
 
 
 @dataclass
-class ActionType:
-    Move = 0
-    Eat = 1
-    Sleep = 2
-
-
-# TODO refactor this to work with the gym `Actions` enum defined above
-@dataclass
-class Action:
-    type: ActionType
-    quantity: int
-
-    def __init__(self, type, quantity=1):
-        self.type = type
-        self.quantity = quantity
+class BeaverStepInfo:
+    success: True
+    action_type: str

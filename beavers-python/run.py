@@ -11,7 +11,7 @@ def cwd() -> str:
 def main():
     os.chdir(cwd() + "/cli")
     run(["uv", "sync"])
-    run(["uv", "run", "main.py"])
+    run(["uv", "run", "main.py"] + sys.argv[1:])
 
 
 if __name__ == "__main__":

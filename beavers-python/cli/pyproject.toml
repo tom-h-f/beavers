@@ -5,11 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "gridworld",
+    "core",
     "render",
 ]
 
 [tool.uv.sources]
-gridworld = { workspace = true }
 render = { workspace = true }
+core = { workspace = true }
 

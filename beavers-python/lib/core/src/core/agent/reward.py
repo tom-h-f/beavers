@@ -1,42 +1,34 @@
-from .agent import Beaver, AgentDied
-from .action import Action, ActionType
+from core.agent import Beaver
+from core.agent.exceptions import AgentIsDead
+from .action import Action
 
 
-class Reward:
-    EXISTENCE_PENALTY = -0.05
-    value = 0
+def calculate_reward(state: Beaver, action: Action) -> float:
+    existence_penalty = -0.05
+    reward = 0.0
 
-    def add(self, other: float):
-        self.value += other
-
-    def die(self):
-        raise AgentDied
-
-    def existence_penalty(self):
-        self.add(self.EXISTENCE_PENALTY)
-
-    def __format__(self, fmt):
-        return f"Reward({self.value})"
-
-
-def calculate_reward(state: Beaver, action: Action):
-    reward = Reward()
-    import random
-    if random.randrange(0, 200, 1) == 1:
-        reward.die()
-        return
-
-    if state.energy == 0:
-        reward.die()
-    match action.type:
-        case ActionType.Move:
-            reward.add(0)
-        case ActionType.Eat:
+    match action:
+        case Action.MoveRight:
+            reward += 1
+        case Action.MoveUp:
+            reward += 1
+        case Action.MoveLeft:
+            reward += 1
+        case Action.MoveDown:
+            reward += 1
+        case Action.Eat:
+            # TODO: this reward and the eat itself should check for the log in inventory, massive penalty when attempting
+            # to eat when we dont have a log to eat.
             if state.energy < 40:
-                reward.add(1)
-        case ActionType.Sleep:
+                reward += 50
+            elif state.energy > 75:
+                reward -= 50
+        case Action.Sleep:
+            return 0xFFFFFFF
             if state.energy < 20:
-                reward.add(1)
+                reward += 50
+            elif state.energy > 60:
+                reward -= 50
 
-    reward.existence_penalty()
+    reward += existence_penalty
     return reward
