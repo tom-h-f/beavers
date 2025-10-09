@@ -22,6 +22,10 @@ class PygameRenderer:
         self.font = pygame.font.SysFont('Arial', 20)
         # Track text messages for agents: {agent_id: (message, remaining_ticks)}
         self.text_messages = {}
+        # Load beaver image
+        self.beaver_image = pygame.image.load('/Users/tom/Code/beavers/beavers-python/lib/render/beaver.png')
+        # Scale the image to fit the tile size
+        self.beaver_image = pygame.transform.scale(self.beaver_image, (TILE_SIZE_PX, TILE_SIZE_PX))
 
     def draw_grid(self, trainer):
         rows, cols = trainer.env.grid.raw().shape
@@ -34,15 +38,12 @@ class PygameRenderer:
 
     def draw_agents(self, agents):
         for a in agents:
-            # Draw agent as a circle for better visual appeal
+            # Draw agent as beaver image
             center_x = a.y * TILE_SIZE_PX + TILE_SIZE_PX // 2
             center_y = a.x * TILE_SIZE_PX + TILE_SIZE_PX // 2
-            radius = TILE_SIZE_PX // 3
-            pygame.draw.circle(self.display, (255, 100, 100),
-                               (center_x, center_y), radius)
-            # Add a border
-            pygame.draw.circle(self.display, (200, 50, 50),
-                               (center_x, center_y), radius, 2)
+            # Get the rect for the image, centered at the agent's position
+            image_rect = self.beaver_image.get_rect(center=(center_x, center_y))
+            self.display.blit(self.beaver_image, image_rect)
 
             # Render text above agent if present
             agent_id = id(a)  # Use object id as key
@@ -50,7 +51,7 @@ class PygameRenderer:
                 message, remaining_ticks = self.text_messages[agent_id]
                 text_surf = self.font.render(message, True, (255, 255, 255))
                 text_rect = text_surf.get_rect(
-                    center=(center_x, center_y - radius - 10))
+                    center=(center_x, center_y - TILE_SIZE_PX // 2 - 10))
                 self.display.blit(text_surf, text_rect)
                 # Decrement ticks and remove if expired
                 self.text_messages[agent_id] = (message, remaining_ticks - 1)

@@ -11,6 +11,7 @@ class Grid:
         self.width = width
         self.height = height
         self._grid = generate_world(width, height)
+        self.generate_candidate_beaver_spawn_positions()
 
     def raw(self):
         return self._grid
@@ -43,14 +44,22 @@ class Grid:
     def tile_at(self, x: int, y: int) -> Tile:
         return Tile(self._grid[x][y])
 
-    def get_random_tile_of_type(self, tile_type: Tile) -> (int, int):
-        """
-        Gets a position of a tile in the grid matching the given `tile_type`
-        """
-        ground_y, ground_x = np.where(self._grid == tile_type)
+    def generate_candidate_beaver_spawn_positions(self):
+        self.candidate_beaver_spots = []
+        rows, cols = np.where(self._grid == Tile.GROUND)
+        coords = list(zip(rows, cols))         # → [(0, 1), (1, 0), (1, 2)]
 
-        idx = np.random.choice(len(ground_x))
-        return ground_x[idx], ground_y[idx]
+        h, w = self._grid.shape
+        for r, c in coords:                       # walk over every 1-cell
+            sr = slice(max(0, r-1), min(h, r+2))  # row window
+            sc = slice(max(0, c-1), min(w, c+2))  # col window
+            if np.all(self._grid[sr, sc]):
+                self.candidate_beaver_spots.append((r, c))
+
+    def get_random_spawn_pos(self) -> (int, int):
+        pos = random.choice(self.candidate_beaver_spots)
+        assert self.tile_at(pos[0], pos[1]) == Tile.GROUND
+        return pos
 
 
 def generate_world(width, height):

@@ -9,7 +9,7 @@ import time
 class Trainer:
     # how much we value future rewards vs immediate
     # higher is longer-term thinking
-    gamma = 0.975  # aka 'discount factor'
+    gamma = 0.6  # aka 'discount factor', should really be like 0.995 for RL
     learning_rate = 0.01
 
     def __init__(self,  network: DQNNetwork, target_network: DQNNetwork, replay_buffer: ReplayBuffer, device="mps"):
@@ -27,7 +27,7 @@ class Trainer:
 
     def train_step(self, a: DQNBeaver):
         sample = self.replay_buffer.sample()
-        sample.rewards = torch.clamp(sample.rewards, -10, 10)
+        sample.rewards = torch.clamp(sample.rewards, -1, 1)
 
         q_values = self.network(sample.states.to(self.device))
         # shape: [batch_sz, n_actions]

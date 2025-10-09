@@ -5,7 +5,7 @@ from .action import Action
 def calculate_reward(state: Beaver, action: Action, env) -> (float, bool):
     existence_penalty = -0.05
     reward = 0.0
-    INVALID_ACTION = -10
+    INVALID_ACTION = -1
 
     if not action.is_valid(state, env.grid):
         return INVALID_ACTION, False

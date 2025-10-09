@@ -16,9 +16,9 @@ from core.agent.action import BeaverStepInfo
 
 
 class Runner:
-    epsilon = 0.75
+    epsilon = 0.85
     epsilon_min = 0.001
-    epsilon_decay = 0.9
+    epsilon_decay = 0.95
 
     def __init__(self, config: OrchestratorConfig, agents, network, target_network, graphics=None):
         self.max_steps = config.max_steps
@@ -33,6 +33,9 @@ class Runner:
         self.graphics = graphics
         self.reset_agents()
 
+        self.total_actions = 0
+        self.invalid_actions = 0
+
     def init_environment(self, config: OrchestratorConfig):
         match config.env_type:
             case EnvironmentType.GridWorld:
@@ -43,9 +46,12 @@ class Runner:
     def reset_agents(self):
         # TODO: also reset their state like energy+inventory etc?
         for a in self.agents:
-            a.beaver.x, a.beaver.y = self.env.grid.get_random_tile_of_type(
-                Tile.GROUND)
+            a.beaver.x, a.beaver.y = self.env.grid.get_random_spawn_pos()
             a.beaver.energy = 100
+
+        # Reset action counters for new episode
+        self.total_actions = 0
+        self.invalid_actions = 0
 
     def run(self, agents: List[DQNBeaver]):
         episode_losses = []
@@ -66,13 +72,22 @@ class Runner:
                         episode_loss.append(self.trainer.losses[-1])
 
                 step_count += 1
-                if step_count % (math.floor(self.max_steps / 10)) == 0:
+                if step_count % 32 == 0:
                     self.trainer.update_target_network()
 
             episode_losses.append(sum(episode_loss) /
                                   len(episode_loss) if episode_loss else 0)
             print("Final Loss:   ", sum(episode_loss) / len(episode_loss))
             print(f"Episode took: {time.perf_counter() - start:.6f}s")
+
+            if self.total_actions > 0:
+                invalid_percentage = (
+                    self.invalid_actions / self.total_actions) * 100
+                print(f"Invalid Actions: {
+                      self.invalid_actions}/{self.total_actions} ({invalid_percentage:.2f}%)")
+            else:
+                print("No actions attempted in this episode.")
+
             self.decay_epsilon()
         self.plot_losses(episode_losses)
 
@@ -83,10 +98,14 @@ class Runner:
 
         reward, valid = calculate_reward(a.beaver, action, self.env)
         # print(f"action{action.name:10}\treward={reward}\tepsilon={self.epsilon}")
+
+        self.total_actions += 1
+
         if valid:
             a.beaver.do(action, self.env)
             next_state = self.observe(a)
         else:
+            self.invalid_actions += 1
             # print(f"[{str(a.id)[:2]}] INVALID ACTION [{a.beaver.x}, { a.beaver.y}]: {action.name} ")
             next_state = observation
         return Experience(observation, action, next_state, reward,
