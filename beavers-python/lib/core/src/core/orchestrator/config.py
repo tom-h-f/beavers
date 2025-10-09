@@ -8,4 +8,5 @@ class OrchestratorConfig:
     batch_size: int = 16*16
     render_enabled: bool = False
     torch_device: str = "mps"
+    max_steps: int = 1024
     env_type: EnvironmentType = EnvironmentType.GridWorld

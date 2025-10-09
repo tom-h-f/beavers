@@ -8,6 +8,7 @@ def main(args):
     config.number_of_episodes = args.episodes
     config.render_enabled = args.render
     config.batch_size = args.batch_size
+    config.max_steps = args.max_steps
     print(config)
     o = Orchestrator(config)
 
@@ -38,6 +39,12 @@ if __name__ == "__main__":
         type=int,
         default=64,
         help="Batch Size for training purposes",
+    )
+    parser.add_argument(
+        "--max-steps",
+        type=int,
+        default=1024,
+        help="Maximum training steps per episode",
     )
     parser.add_argument(
         "--render", action="store_true", help="Show the pygame render window"

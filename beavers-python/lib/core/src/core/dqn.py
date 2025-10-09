@@ -52,14 +52,15 @@ class DQNNetwork(nn.Module):
 
 
 class DQNBeaver:
-    def __init__(self, network, x=0, y=0):
+    def __init__(self, network, x=0, y=0, device="mps"):
         self.beaver = Beaver()
         self.id = self.beaver.id
         self.network = network
         self.done = False
+        self._device = device
 
     def select_action(self, observation, epsilon) -> (Action, float):
-        q_values = self.network.forward(observation)
+        q_values = self.network.forward(observation.to(self._device))
         if random.random() < epsilon:
             action = Action.random_action()
         else:
@@ -69,7 +70,6 @@ class DQNBeaver:
     def is_done(self) -> bool:
         # TODO: Could we add other 'done' conditions?
         if self.beaver.energy <= 0:
-            print("dead beaver")
             return True
 
         return False

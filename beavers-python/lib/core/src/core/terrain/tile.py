@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 # No. of pixels per tile
-TILE_SIZE_PX = 8
+TILE_SIZE_PX = 32
 
 
 class Tile(IntEnum):

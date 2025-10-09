@@ -16,6 +16,7 @@ class Action(IntEnum):
     MoveDown = 3
     Eat = 4
     Sleep = 5
+    BuildDam = 6
 
     def is_move(self) -> bool:
         return int(self) < Action.Eat
@@ -31,6 +32,8 @@ class Action(IntEnum):
                 return "eat"
             case Action.Sleep:
                 return "sleep"
+            case Action.BuildDam:
+                return "build_dam"
             case _:
                 raise ValueError("Invalid Action")
 

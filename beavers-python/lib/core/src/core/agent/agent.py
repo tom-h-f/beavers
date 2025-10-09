@@ -22,10 +22,13 @@ class Beaver:
             self.inventory["logs"] -= 1
             self.energy += 5
 
+    def build_dam(self, direction: int):
+        pass
+
     def sleep(self, ticks: int):
         self.sleep_ticks_remaining = ticks
 
-    def do(self, action: Action):
+    def do(self, action: Action, env):
         match action:
             case Action.MoveRight:
                 self.move(1, 0)
@@ -39,3 +42,5 @@ class Beaver:
                 self.eat()
             case Action.Sleep:
                 self.sleep(1)
+            case _:
+                self.build_dam(env)

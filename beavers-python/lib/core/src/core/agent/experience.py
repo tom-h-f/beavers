@@ -28,13 +28,12 @@ class ReplaySample:
 
 
 class ReplayBuffer:
-    def __init__(self, batch_size, limit=0xFFFF):
+    def __init__(self, batch_size):
         self._list = deque()
         self.batch_size = batch_size
-        self.limit = limit
 
     def add(self, e: Experience):
-        if self.len() >= self.limit:
+        if self.len() >= 100_000:
             self._list.popleft()
 
         self._list.append(e)
