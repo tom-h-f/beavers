@@ -2,8 +2,5 @@
 ## TODOs
 
 
-- [ ] Use the replay buffer
-    - Enable training on batch sizes over 1.
-    - Training uses a random sample from the replay buffer
-
+- Change actions. We don't want 4 individual actions for 'move', we just want one, with some information attached to indicate in which direction, same goes for building a dam etc.
 
