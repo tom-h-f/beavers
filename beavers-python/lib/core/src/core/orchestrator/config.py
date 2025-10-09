@@ -1,4 +1,5 @@
 from core.environment import EnvironmentType
+from typing import Optional
 
 
 class OrchestratorConfig:
@@ -10,3 +11,4 @@ class OrchestratorConfig:
     torch_device: str = "mps"
     max_steps: int = 1024
     env_type: EnvironmentType = EnvironmentType.GridWorld
+    model_path: Optional[str] = None

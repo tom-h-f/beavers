@@ -9,6 +9,7 @@ def main(args):
     config.render_enabled = args.render
     config.batch_size = args.batch_size
     config.max_steps = args.max_steps
+    config.model_path = args.model
     print(config)
     o = Orchestrator(config)
 
@@ -48,6 +49,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--render", action="store_true", help="Show the pygame render window"
+    )
+    parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Path to the model file to load for training",
     )
     args = parser.parse_args()
     main(args)

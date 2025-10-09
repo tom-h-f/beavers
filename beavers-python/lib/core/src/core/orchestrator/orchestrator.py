@@ -26,6 +26,11 @@ class Orchestrator:
         self.target_network = DQNNetwork(
             self.observation_shape(), Action.how_many())
 
+        if self.config.model_path is not None:
+            state_dict = torch.load(self.config.model_path)
+            self.network.load_state_dict(state_dict)
+            self.target_network.load_state_dict(state_dict)
+
         for _ in range(self.config.number_of_agents):
             self.agents.append(DQNBeaver(self.network))
 
