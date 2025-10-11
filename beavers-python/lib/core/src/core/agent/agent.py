@@ -1,4 +1,6 @@
-from .action import Action
+from .action import Action, Move, Eat, Sleep, BuildDam
+from core.terrain.tile import Tile
+
 import uuid
 
 
@@ -9,38 +11,42 @@ class Beaver:
         self.x: int = x
         self.y: int = y
         self.energy = 100
-        self.inventory = {"logs": 0}
+        self.logs = 0
+        self.food = 0
         self.sleep_ticks_remaining = 0
 
-    def move(self, dx: int, dy: int):
-        self.x += dx
-        self.y += dy
-        self.energy -= (dx + dy) * 4
+    def move(self, m: Move):
+        self.x, self.y = m.direction.apply(self.x, self.y)
+        self.energy -= 5
 
     def eat(self):
-        if self.inventory["logs"] > 0:
-            self.inventory["logs"] -= 1
-            self.energy += 5
+        if self.food > 0:
+            self.energy += 25
 
-    def build_dam(self, direction: int):
-        pass
+    def build_dam(self, bd: BuildDam, env):
+        import core.environment.gridworld as gw
+        dam_location_x = self.x
+        dam_location_y = self.y
+        dam_location_x, dam_location_y = bd.direction.apply(
+            dam_location_x, dam_location_y)
+
+        env.grid.raw()[dam_location_x][dam_location_y] = Tile.DAM
 
     def sleep(self, ticks: int):
         self.sleep_ticks_remaining = ticks
 
     def do(self, action: Action, env):
+        # TODO: Look up if better way to get the Move() instances
+        # i think should work without the args but waiting to test
         match action:
-            case Action.MoveRight:
-                self.move(1, 0)
-            case Action.MoveUp:
-                self.move(0, 1)
-            case Action.MoveLeft:
-                self.move(-1, 0)
-            case Action.MoveDown:
-                self.move(0, -1)
-            case Action.Eat:
+            case Move(direction=direction):
+                self.move(action)
+            case Eat():
                 self.eat()
-            case Action.Sleep:
+            case Sleep():
                 self.sleep(1)
-            case _:
-                self.build_dam(env)
+            case BuildDam(direction=direction):
+                self.build_dam(action, env)
+
+    def tile_on(self, grid) -> Tile:
+        return grid.tile_at(self.x, self.y)

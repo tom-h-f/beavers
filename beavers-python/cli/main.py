@@ -4,13 +4,13 @@ from core.orchestrator import Orchestrator, OrchestratorConfig
 
 def main(args):
     config = OrchestratorConfig()
-    config.number_of_agents = args.count
+    config.number_of_agents = args.agent_count
     config.number_of_episodes = args.episodes
     config.render_enabled = args.render
     config.batch_size = args.batch_size
     config.max_steps = args.max_steps
     config.model_path = args.model
-    print(config)
+    config.size = args.size
     o = Orchestrator(config)
 
     try:
@@ -24,7 +24,7 @@ if __name__ == "__main__":
         description="Run the agent environment simulation."
     )
     parser.add_argument(
-        "--count",
+        "--agent-count",
         type=int,
         default=3,
         help="Number of agents to spawn in the environment.",
@@ -55,6 +55,12 @@ if __name__ == "__main__":
         type=str,
         default=None,
         help="Path to the model file to load for training",
+    )
+    parser.add_argument(
+        "--size",
+        type=int,
+        default=16,
+        help="Size of the training enviroment",
     )
     args = parser.parse_args()
     main(args)

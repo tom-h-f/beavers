@@ -1,4 +1,3 @@
-import render
 import torch
 
 import core.environment.gridworld.observation as gw_obs
@@ -18,8 +17,12 @@ class Orchestrator:
         self.config = config
 
         torch.set_default_device(config.torch_device)
-        self.graphics = render.PygameRenderer(
-            config.size, config.size) if config.render_enabled else None
+        if config.render_enabled:
+            import render
+            self.graphics = render.PygameRenderer(
+                config.size, config.size)
+        else:
+            self.graphics = None
 
         self.network = DQNNetwork(
             self.observation_shape(), Action.how_many())
@@ -33,6 +36,7 @@ class Orchestrator:
 
         for _ in range(self.config.number_of_agents):
             self.agents.append(DQNBeaver(self.network))
+        assert (len(self.agents) == self.config.number_of_agents)
 
         self.runner = Runner(
             config, self.agents, self.network, self.target_network, self.graphics)
@@ -45,4 +49,4 @@ class Orchestrator:
         match self.config.env_type:
             case EnvironmentType.GridWorld:
                 return (gw_obs.N_OBSERVATION_DIMENSIONS,
-                        self.config.size, self.config.size)
+                        3, 3)

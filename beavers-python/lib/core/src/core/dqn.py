@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from core.agent import Beaver, Action
+from core.agent.action import action_from_int
 import random
 
 
@@ -64,8 +65,9 @@ class DQNBeaver:
         if random.random() < epsilon:
             action = Action.random_action()
         else:
-            action = q_values.argmax().item()
-        return Action(action), q_values.max()
+            action_idx = q_values.argmax().item()
+            action = action_from_int(action_idx)
+        return action, q_values.max()
 
     def is_done(self) -> bool:
         # TODO: Could we add other 'done' conditions?

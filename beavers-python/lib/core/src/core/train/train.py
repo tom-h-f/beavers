@@ -9,8 +9,8 @@ import time
 class Trainer:
     # how much we value future rewards vs immediate
     # higher is longer-term thinking
-    gamma = 0.6  # aka 'discount factor', should really be like 0.995 for RL
-    learning_rate = 0.01
+    gamma = 0.925  # aka 'discount factor', should really be like 0.995 for RL
+    learning_rate = 0.001
 
     def __init__(self,  network: DQNNetwork, target_network: DQNNetwork, replay_buffer: ReplayBuffer, device="mps"):
         self.network = network

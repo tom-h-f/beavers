@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from dataclasses import dataclass
 from typing import List
-from core.agent.action import BeaverStepInfo, Action
+from core.agent.action import BeaverStepInfo, Action, action_to_int
 from collections import deque
 
 
@@ -54,7 +54,7 @@ class ReplayBuffer:
         next_states = torch.cat([s.next_state for s in candidates])
         assert states.shape == next_states.shape
 
-        actions = torch.tensor([int(s.action) for s in candidates])
+        actions = torch.tensor([action_to_int(s.action) for s in candidates])
         rewards = torch.tensor([s.reward for s in candidates])
         dones = torch.tensor([s.done for s in candidates])
         return ReplaySample(states, next_states, actions,

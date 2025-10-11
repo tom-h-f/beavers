@@ -3,9 +3,9 @@ from typing import Optional
 
 
 class OrchestratorConfig:
-    number_of_agents: int = 3
+    number_of_agents: int = 20
     number_of_episodes: int = 10
-    size: int = 16
+    size: int = 32
     batch_size: int = 16*16
     render_enabled: bool = False
     torch_device: str = "mps"

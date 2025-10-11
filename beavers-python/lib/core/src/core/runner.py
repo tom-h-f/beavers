@@ -16,9 +16,9 @@ from core.agent.action import BeaverStepInfo
 
 
 class Runner:
-    epsilon = 0.85
-    epsilon_min = 0.001
-    epsilon_decay = 0.95
+    epsilon = 1.0
+    epsilon_min = 0.01
+    epsilon_decay = 0.990
 
     def __init__(self, config: OrchestratorConfig, agents, network, target_network, graphics=None):
         self.max_steps = config.max_steps
@@ -58,6 +58,7 @@ class Runner:
         for i in range(self.number_of_episodes):
             start = time.perf_counter()
             print(f"\nRunning episode {i} - e={self.epsilon}")
+            self.env.reset()
             self.reset_agents()
             step_count = 0
             episode_loss = []
@@ -67,9 +68,10 @@ class Runner:
                     if self.graphics is not None:
                         self.graphics.render(self, exp.action, a)
                     self.replay_buffer.add(exp)
-                    self.trainer.train_step(a)
-                    if self.trainer.losses:
-                        episode_loss.append(self.trainer.losses[-1])
+                    if step_count % 16 == 0:
+                        self.trainer.train_step(a)
+                        if self.trainer.losses:
+                            episode_loss.append(self.trainer.losses[-1])
 
                 step_count += 1
                 if step_count % 32 == 0:
@@ -96,9 +98,18 @@ class Runner:
 
         action, q = a.select_action(observation, self.epsilon)
 
-        reward, valid = calculate_reward(a.beaver, action, self.env)
-        # print(f"action{action.name:10}\treward={reward}\tepsilon={self.epsilon}")
+        reward, valid = calculate_reward(
+            a.beaver, self.agents, action, self.env)
 
+        # ANSI codes
+        RED = "\033[31m"
+        RESET = "\033[0m"
+
+        prefix = "" if valid else RED
+        suffix = "" if valid else RESET
+
+        # print(f"{prefix}action={action.str():10}\treward={
+        #      reward}\tepsilon={self.epsilon}{suffix}")
         self.total_actions += 1
 
         if valid:
@@ -108,8 +119,11 @@ class Runner:
             self.invalid_actions += 1
             # print(f"[{str(a.id)[:2]}] INVALID ACTION [{a.beaver.x}, { a.beaver.y}]: {action.name} ")
             next_state = observation
+            return Experience(observation, action, next_state, reward,
+                              True, BeaverStepInfo(True, action.str()))
+
         return Experience(observation, action, next_state, reward,
-                          a.is_done(), BeaverStepInfo(True, action.to_type_str()))
+                          a.is_done(), BeaverStepInfo(True, action.str()))
 
     def observe(self, a: DQNBeaver):
         return self.env.get_observation(self.alive_agents(), a)
@@ -119,7 +133,7 @@ class Runner:
                            self.epsilon_min)
 
     def is_episode_done(self, step_count: int) -> bool:
-        return any(agent.is_done() for agent in self.agents) or step_count >= self.max_steps
+        return step_count >= self.max_steps
 
     def alive_agents(self) -> List[DQNBeaver]:
         return [x for x in self.agents if not x.done]

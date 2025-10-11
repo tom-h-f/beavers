@@ -8,6 +8,7 @@ class PygameRenderer:
         Tile.WATER: (68, 184, 242),
         Tile.TREE: (163, 86, 86),
         Tile.GROUND: (0, 125, 29),
+        Tile.DAM: (163, 33, 55),
     }
 
     def __init__(self, width, height):
@@ -19,13 +20,15 @@ class PygameRenderer:
         self.clock = pygame.time.Clock()
         # Initialize font for text rendering
         pygame.font.init()
-        self.font = pygame.font.SysFont('Arial', 20)
+        self.font = pygame.font.SysFont('Arial', 8)
         # Track text messages for agents: {agent_id: (message, remaining_ticks)}
         self.text_messages = {}
         # Load beaver image
-        self.beaver_image = pygame.image.load('/Users/tom/Code/beavers/beavers-python/lib/render/beaver.png')
+        self.beaver_image = pygame.image.load(
+            '/Users/tom/Code/beavers/beavers-python/lib/render/beaver.png')
         # Scale the image to fit the tile size
-        self.beaver_image = pygame.transform.scale(self.beaver_image, (TILE_SIZE_PX, TILE_SIZE_PX))
+        self.beaver_image = pygame.transform.scale(
+            self.beaver_image, (TILE_SIZE_PX, TILE_SIZE_PX))
 
     def draw_grid(self, trainer):
         rows, cols = trainer.env.grid.raw().shape
@@ -34,15 +37,17 @@ class PygameRenderer:
             for c in range(cols):
                 self.draw_tile(trainer.env.grid.raw(), r, c)
 
-        self.draw_agents([a.beaver for a in trainer.agents])
+        self.draw_agents(trainer.agents)
 
     def draw_agents(self, agents):
-        for a in agents:
+        for b in [x for x in agents if not x.done]:
+            a = b.beaver
             # Draw agent as beaver image
             center_x = a.y * TILE_SIZE_PX + TILE_SIZE_PX // 2
             center_y = a.x * TILE_SIZE_PX + TILE_SIZE_PX // 2
             # Get the rect for the image, centered at the agent's position
-            image_rect = self.beaver_image.get_rect(center=(center_x, center_y))
+            image_rect = self.beaver_image.get_rect(
+                center=(center_x, center_y))
             self.display.blit(self.beaver_image, image_rect)
 
             # Render text above agent if present
@@ -78,10 +83,7 @@ class PygameRenderer:
                     self.running = False
         self.draw_grid(runner)
         if agent is not None:
-            if action == Action.Eat:
-                self.set_text_for_agent(agent.beaver, 'ate!')
-            elif action == Action.Sleep:
-                self.set_text_for_agent(agent.beaver, 'sleeping...')
+            self.set_text_for_agent(agent.beaver, action.str())
 
         pygame.display.flip()
         self.clock.tick(60)

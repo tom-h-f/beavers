@@ -2,7 +2,7 @@ import random
 import math
 import numpy as np
 
-from core.agent import Beaver, Action
+from core.agent.action import Move, BuildDam
 from core.terrain.tile import Tile
 
 
@@ -18,28 +18,23 @@ class Grid:
 
     def reset(self):
         # TODO: Check this does actually change it
-        self._grid = generate_world(self.width, self.height)
+        new = generate_world(self.width, self.height)
+        assert not np.array_equal(new, self._grid)
+        self._grid = new
 
-    def agent_move_is_valid(self, b: Beaver, action: Action):
-        assert action.is_move()
+    def agent_dam_is_valid(self, b, action: BuildDam):
+        from core.agent.agent import Beaver
         proposed_x = b.x
         proposed_y = b.y
-        match action:
-            case Action.MoveRight:
-                proposed_x += 1
-            case Action.MoveUp:
-                proposed_y += 1
-            case Action.MoveLeft:
-                proposed_x -= 1
-            case Action.MoveDown:
-                proposed_y -= 1
+        proposed_x, proposed_y = action.direction.apply(proposed_x, proposed_y)
 
         if proposed_x < 0 or proposed_y < 0:
             return False
+
         if proposed_x >= self.width or proposed_y >= self.height:
             return False
 
-        return self.tile_at(proposed_x, proposed_y) == Tile.GROUND
+        return self.tile_at(proposed_x, proposed_y) == Tile.WATER
 
     def tile_at(self, x: int, y: int) -> Tile:
         return Tile(self._grid[x][y])
@@ -47,18 +42,19 @@ class Grid:
     def generate_candidate_beaver_spawn_positions(self):
         self.candidate_beaver_spots = []
         rows, cols = np.where(self._grid == Tile.GROUND)
-        coords = list(zip(rows, cols))         # → [(0, 1), (1, 0), (1, 2)]
+        coords = list(zip(rows, cols))
 
         h, w = self._grid.shape
-        for r, c in coords:                       # walk over every 1-cell
-            sr = slice(max(0, r-1), min(h, r+2))  # row window
-            sc = slice(max(0, c-1), min(w, c+2))  # col window
+        for r, c in coords:
+            sr = slice(max(0, r-1), min(h, r+2))
+            sc = slice(max(0, c-1), min(w, c+2))
             if np.all(self._grid[sr, sc]):
                 self.candidate_beaver_spots.append((r, c))
 
     def get_random_spawn_pos(self) -> (int, int):
         pos = random.choice(self.candidate_beaver_spots)
-        assert self.tile_at(pos[0], pos[1]) == Tile.GROUND
+        if self.tile_at(pos[0], pos[1]) != Tile.GROUND:
+            pos = self.get_random_spawn_pos()
         return pos
 
 
@@ -68,7 +64,7 @@ def generate_world(width, height):
     world_grid = np.full((height, width), Tile.GROUND, dtype=float)
 
     # Generate rivers
-    num_rivers = random.randint(1, 3)  # 1 to 3 rivers
+    num_rivers = random.randint(3, 5)  # 1 to 3 rivers
     for _ in range(num_rivers):
         _generate_river(width, height, world_grid)
 
