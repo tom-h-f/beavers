@@ -1,0 +1,6 @@
+(
+	tiles: [
+		"environment/grass_large.png",
+		"environment/frog.png",
+	]
+)
