@@ -2,11 +2,10 @@
 
 ## TODOs
 
-- Create entire world with tiles
-- Render each tile 
+- Generate semi-good terrain, procgen with some kind of river situation. - implement this perhaps: https://rtouti.github.io/graphics/perlin-noise-algorithm
 
 - Create Beavers
-- Create beaver asset
+- Create beaver asset (or use the frog)
 - Render Beavers
 - Add beaver state - inventory etc
 - Beaver Animations
