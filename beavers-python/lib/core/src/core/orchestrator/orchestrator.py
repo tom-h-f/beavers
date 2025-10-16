@@ -18,9 +18,17 @@ class Orchestrator:
 
         torch.set_default_device(config.torch_device)
         if config.render_enabled:
-            import render
-            self.graphics = render.PygameRenderer(
-                config.size, config.size)
+            if config.renderer_type == "pygame":
+                import render
+                self.graphics = render.PygameRenderer(
+                    config.size, config.size)
+            elif config.renderer_type == "tui":
+                from render.tui import TerminalRenderer
+                self.graphics = TerminalRenderer(
+                    config.size, config.size)
+            else:
+                raise ValueError(f"Unknown renderer type: {
+                                 config.renderer_type}")
         else:
             self.graphics = None
 
@@ -39,7 +47,7 @@ class Orchestrator:
         assert (len(self.agents) == self.config.number_of_agents)
 
         self.runner = Runner(
-            config, self.agents, self.network, self.target_network, self.graphics)
+            config, self.agents, self.network, self.target_network)
 
     def train(self):
         self.runner.run(self.agents)

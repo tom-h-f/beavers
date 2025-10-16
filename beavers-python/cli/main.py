@@ -7,6 +7,7 @@ def main(args):
     config.number_of_agents = args.agent_count
     config.number_of_episodes = args.episodes
     config.render_enabled = args.render
+    config.renderer_type = args.renderer
     config.batch_size = args.batch_size
     config.max_steps = args.max_steps
     config.model_path = args.model
@@ -48,7 +49,14 @@ if __name__ == "__main__":
         help="Maximum training steps per episode",
     )
     parser.add_argument(
-        "--render", action="store_true", help="Show the pygame render window"
+        "--render", action="store_true", help="Enable rendering"
+    )
+    parser.add_argument(
+        "--renderer",
+        type=str,
+        choices=["pygame", "tui"],
+        default="tui",
+        help="Renderer type: 'pygame' for graphical window, 'terminal' for text-based",
     )
     parser.add_argument(
         "--model",

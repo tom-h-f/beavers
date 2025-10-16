@@ -72,7 +72,7 @@ class PygameRenderer:
         # Add a subtle border for better visual separation
         pygame.draw.rect(self.display, (50, 50, 50), rect, 1)
 
-    def render(self, runner, action: Action, agent=None):
+    def render(self, runner, action: Action = None, agent=None):
         # TODO should the env get passed somewhere else rather than every render call?
         # TODO this while running loop should be what calls the render rather than inside of it
         for event in pygame.event.get():
@@ -82,7 +82,7 @@ class PygameRenderer:
                 if event.key == pygame.K_q:
                     self.running = False
         self.draw_grid(runner)
-        if agent is not None:
+        if agent is not None and action is not None:
             self.set_text_for_agent(agent.beaver, action.str())
 
         pygame.display.flip()
