@@ -1,12 +1,8 @@
 [workspace]
-members = [
-  "crates/core",
-  "crates/envs",
-  "crates/agents",
-  "crates/sim",
-  "crates/cli",
-]
+members = [ "castor-cli","castor-core"
+, "castor-enviroments"]
 resolver = "2"
+
 
 [workspace.package]
 edition = "2021"

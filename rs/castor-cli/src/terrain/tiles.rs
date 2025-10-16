@@ -43,35 +43,12 @@ pub fn tilemap_loader(
     }
 }
 
-fn create_tilemap(mut commands: &mut Commands, tile_handles: Vec<Handle<Image>>) {
-    let tilemap_entity = commands.spawn_empty().id();
-    let tilemap_id = TilemapId(tilemap_entity);
-    let map_size = TilemapSize {
-        x: super::GRID_WIDTH,
-        y: super::GRID_HEIGHT,
-    };
+fn create_tilemap(commands: &mut Commands, tile_handles: Vec<Handle<Image>>) {
+    let tilemap_bundles = super::generation::gen_terrain_map(commands, tile_handles);
 
-    let mut tile_storage = TileStorage::empty(map_size);
-    let tile_size = TilemapTileSize { x: 256.0, y: 256.0 };
-    let grid_size = TilemapGridSize { x: 204.0, y: 118.0 };
-    let map_type = TilemapType::Isometric(IsoCoordSystem::Diamond);
-
-    super::generation::gen_terrain_map(&mut tile_storage, commands, tilemap_id);
-
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size,
-        size: map_size,
-        storage: tile_storage,
-        texture: TilemapTexture::Vector(tile_handles),
-        tile_size,
-        map_type,
-        anchor: TilemapAnchor::Center,
-        render_settings: TilemapRenderSettings {
-            render_chunk_size: UVec2::new(2, 1),
-            y_sort: true,
-        },
-        ..Default::default()
-    });
+    for (entity, bundle) in tilemap_bundles {
+        commands.entity(entity).insert(bundle);
+    }
 }
 
 // TODO: try to codegen this from the `tiles.ron` file
