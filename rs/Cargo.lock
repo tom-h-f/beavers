@@ -168,12 +168,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.100"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a23eb6b1614318a8071c9b2521f36b424b2c83db5eb3a0fead4a6c0809af6e61"
-
-[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -326,7 +320,6 @@ version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "342f7e9335416dc98642d5747c4ed8a6ad9f7244a36d5b2b7a1b7910e4d8f524"
 dependencies = [
- "bevy_dylib",
  "bevy_internal",
 ]
 
@@ -376,7 +369,7 @@ dependencies = [
  "downcast-rs 2.0.2",
  "either",
  "petgraph",
- "ron 0.10.1",
+ "ron",
  "serde",
  "smallvec",
  "thiserror 2.0.17",
@@ -470,7 +463,7 @@ dependencies = [
  "futures-lite",
  "js-sys",
  "parking_lot",
- "ron 0.10.1",
+ "ron",
  "serde",
  "stackfuture",
  "thiserror 2.0.17",
@@ -554,20 +547,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_common_assets"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf2d95660d90ec38e1259afa5fe95c5b9f72d822d4dfd2dbfa6ef4c176d3078f"
-dependencies = [
- "anyhow",
- "bevy",
- "csv",
- "ron 0.11.0",
- "serde",
- "thiserror 2.0.17",
-]
-
-[[package]]
 name = "bevy_core_pipeline"
 version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -626,15 +605,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_dylib"
-version = "0.17.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b7834bd6b49e3459b94fe2ee2f532de820fd8b91183976e375bf88098e48fe2"
-dependencies = [
- "bevy_internal",
-]
-
-[[package]]
 name = "bevy_ecs"
 version = "0.17.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -672,16 +642,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "bevy_ecs_tilemap"
-version = "0.17.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a7176ff40586face39666fab2c3692c62bd5de67987164e6d8b316bc19e27d7"
-dependencies = [
- "bevy",
- "log",
 ]
 
 [[package]]
@@ -1715,13 +1675,8 @@ name = "castor-cli"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_common_assets",
- "bevy_ecs_tilemap",
- "event-listener",
- "futures-lite",
- "getrandom",
  "rand",
- "serde",
+ "rand_chacha",
 ]
 
 [[package]]
@@ -2030,27 +1985,6 @@ name = "crunchy"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
-
-[[package]]
-name = "csv"
-version = "1.3.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "acdc4883a9c96732e4733212c01447ebd805833b7275a73ca3ee080fd77afdaf"
-dependencies = [
- "csv-core",
- "itoa",
- "ryu",
- "serde",
-]
-
-[[package]]
-name = "csv-core"
-version = "0.1.12"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d02f3b0da4c6504f86e9cd789d8dbafab48c2321be74e9987593de5a894d93d"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "ctrlc"
@@ -3875,19 +3809,6 @@ name = "ron"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "beceb6f7bf81c73e73aeef6dd1356d9a1b2b4909e1f0fc3e59b034f9572d7b7f"
-dependencies = [
- "base64",
- "bitflags 2.9.4",
- "serde",
- "serde_derive",
- "unicode-ident",
-]
-
-[[package]]
-name = "ron"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db09040cc89e461f1a265139777a2bde7f8d8c67c4936f700c63ce3e2904d468"
 dependencies = [
  "base64",
  "bitflags 2.9.4",
