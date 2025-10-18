@@ -131,6 +131,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
     // spawn the flat board
     let cell_scene =
         asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/ground_grass.glb"));
+
+    let big_block =
+        asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/ground_riverStraight.glb"));
     game.board = (0..BOARD_SIZE_J)
         .map(|j| {
             (0..BOARD_SIZE_I)
@@ -139,11 +142,19 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMu
                     // we are not for now.
                     // the below `height` would go in the transform in `y` where `0` currently is
                     //let height = rng.random_range(-0.1..0.1);
-                    commands.spawn((
-                        DespawnOnExit(GameState::Playing),
-                        Transform::from_xyz(i as f32, 0.0, j as f32),
-                        SceneRoot(cell_scene.clone()),
-                    ));
+                    if j % 16 == 0 {
+                        commands.spawn((
+                            DespawnOnExit(GameState::Playing),
+                            Transform::from_xyz(i as f32, 0.0, j as f32),
+                            SceneRoot(big_block.clone()),
+                        ));
+                    } else {
+                        commands.spawn((
+                            DespawnOnExit(GameState::Playing),
+                            Transform::from_xyz(i as f32, 0.0, j as f32),
+                            SceneRoot(cell_scene.clone()),
+                        ));
+                    }
                     Cell { height: 0.0 }
                 })
                 .collect()
