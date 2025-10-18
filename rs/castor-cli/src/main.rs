@@ -1,8 +1,15 @@
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use bevy::scene::SceneInstanceReady;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
+
+#[derive(Component)]
+struct AnimationToPlay {
+    graph_handle: Handle<AnimationGraph>,
+    index: AnimationNodeIndex,
+}
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -101,14 +108,31 @@ fn setup_cameras(mut commands: Commands, mut game: ResMut<Game>) {
     ));
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut game: ResMut<Game>) {
-    let mut rng = if std::env::var("GITHUB_ACTIONS") == Ok("true".to_string()) {
-        // We're seeding the PRNG here to make this example deterministic for testing purposes.
-        // This isn't strictly required in practical use unless you need your app to be deterministic.
-        ChaCha8Rng::seed_from_u64(19878367467713)
-    } else {
-        ChaCha8Rng::from_os_rng()
-    };
+fn setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut game: ResMut<Game>,
+    mut graphs: ResMut<Assets<AnimationGraph>>,
+) {
+    let (graph, index) = AnimationGraph::from_clip(
+        asset_server
+            .load(GltfAssetLabel::Animation(17).from_asset("models/beaver/beaver_animations.glb")),
+    );
+
+    commands
+        .spawn((
+            AnimationToPlay {
+                graph_handle: graphs.add(graph),
+                index,
+            },
+            SceneRoot(
+                asset_server.load(
+                    GltfAssetLabel::Scene(0).from_asset("models/beaver/beaver_animations.glb"),
+                ),
+            ),
+        ))
+        .observe(play_animation_when_ready);
+    let mut rng = ChaCha8Rng::from_os_rng();
 
     // reset the game state
     game.cake_eaten = 0;
@@ -417,4 +441,45 @@ fn display_score(mut commands: Commands, game: Res<Game>) {
             TextColor(Color::srgb(0.5, 0.5, 1.0)),
         )],
     ));
+}
+fn play_animation_when_ready(
+    scene_ready: On<SceneInstanceReady>,
+    mut commands: Commands,
+    children: Query<&Children>,
+    animations_to_play: Query<&AnimationToPlay>,
+    mut players: Query<&mut AnimationPlayer>,
+) {
+    if let Ok(animation_to_play) = animations_to_play.get(scene_ready.entity) {
+        for child in children.iter_descendants(scene_ready.entity) {
+            if let Ok(mut player) = players.get_mut(child) {
+                player.play(animation_to_play.index).repeat();
+
+                commands
+                    .entity(child)
+                    .insert(AnimationGraphHandle(animation_to_play.graph_handle.clone()));
+            }
+        }
+    }
+}
+
+/// Whenever a mesh asset is loaded, print the name of the asset and the names
+/// of its morph targets.
+fn name_morphs(
+    asset_server: Res<AssetServer>,
+    mut events: MessageReader<AssetEvent<Mesh>>,
+    meshes: Res<Assets<Mesh>>,
+) {
+    for event in events.read() {
+        if let AssetEvent::<Mesh>::Added { id } = event
+            && let Some(path) = asset_server.get_path(*id)
+            && let Some(mesh) = meshes.get(*id)
+            && let Some(names) = mesh.morph_target_names()
+        {
+            info!("Morph target names for {path:?}:");
+
+            for name in names {
+                info!("  {name}");
+            }
+        }
+    }
 }

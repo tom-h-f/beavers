@@ -4,11 +4,8 @@
 
 - Generate semi-good terrain, procgen with some kind of river situation. - implement this perhaps: https://rtouti.github.io/graphics/perlin-noise-algorithm
 
-- Create Beavers
-- Create beaver asset (or use the frog)
-- Render Beavers
+- Beaver Animations: Implement this from scratch using bevy guides and use the gltf animations
 - Add beaver state - inventory etc
-- Beaver Animations
 
 - World State - Tree/dam/other health/data
 
@@ -20,6 +17,11 @@
 ## Resources
 
 Good code to read from: https://bevy.org/examples/games/alien-cake-addict/
+
+proced. code to copy for terrain gen?
+https://github.com/bones-ai/rust-procedural-world/blob/main/src/terrain.rs
+
+Potentially buy this pack for nicer ambience
 
 ## WASM
 
