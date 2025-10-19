@@ -25,11 +25,9 @@ pub fn handle_animation_events(
 ) {
     for event in events.read() {
         if let Ok((mut action, mut animator)) = query.get_mut(event.entity) {
-            // Always update if force_replay is true, otherwise only if different
             if event.force_replay || action.action != event.action {
                 action.action = event.action;
 
-                // Set action timer for one-shot animations
                 if let Some(duration) = event.action.duration() {
                     animator.action_timer = Some(Timer::from_seconds(duration, TimerMode::Once));
                 } else {
@@ -46,7 +44,6 @@ pub fn check_idle_state(
 ) {
     for (entity, current_action, anim_state) in query.iter() {
         match current_action.action {
-            // Walk -> Idle when timer finishes
             BeaverAction::Walk => {
                 if anim_state.idle_timer.is_finished() {
                     anim_events.write(TriggerAnimation {
@@ -56,7 +53,6 @@ pub fn check_idle_state(
                     });
                 }
             }
-            // Jump/Eat -> Idle when action timer finishes
             BeaverAction::Jump | BeaverAction::Eat => {
                 if let Some(ref timer) = anim_state.action_timer {
                     if timer.is_finished() {
@@ -129,16 +125,21 @@ pub fn play_animation_when_ready(
     mut commands: Commands,
     children: Query<&Children>,
     animations_to_play: Query<&AnimationToPlay>,
-    mut players: Query<&mut AnimationPlayer>,
+    players: Query<&AnimationPlayer>,
+    mut anim_events: MessageWriter<TriggerAnimation>,
 ) {
     if let Ok(animation_to_play) = animations_to_play.get(scene_ready.entity) {
         for child in children.iter_descendants(scene_ready.entity) {
-            if let Ok(mut player) = players.get_mut(child) {
-                player.play(AnimationNodeIndex::new(0)).repeat();
-
+            if let Ok(_player) = players.get(child) {
                 commands
                     .entity(child)
                     .insert(AnimationGraphHandle(animation_to_play.graph_handle.clone()));
+
+                anim_events.write(TriggerAnimation {
+                    entity: scene_ready.entity,
+                    action: BeaverAction::Idle,
+                    force_replay: true,
+                });
             }
         }
     }
