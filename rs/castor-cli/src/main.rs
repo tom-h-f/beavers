@@ -1,84 +1,16 @@
 use std::f32::consts::PI;
 
-use bevy::prelude::*;
+use beaver::Beaver;
+pub use bevy::prelude::*;
 use bevy::scene::SceneInstanceReady;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 
-pub const MOVE_SPEED: f32 = 2.0;
-pub const MOVE_DURATION: f32 = MOVE_SPEED * 0.3;
-pub const MOVE_COOLDOWN: f32 = 0.01;
-
-pub type BeaverDirection = f32;
-pub const BEAVER_UP: BeaverDirection = PI / 2.;
-pub const BEAVER_DOWN: BeaverDirection = -PI / 2.;
-pub const BEAVER_LEFT: BeaverDirection = PI;
-pub const BEAVER_RIGHT: BeaverDirection = 0.;
-
-pub fn dir_as_quat(dir: BeaverDirection) -> Quat {
-    Quat::from_rotation_y(dir)
-}
-
-#[derive(Debug, Component)]
-struct AnimationToPlay {
-    graph_handle: Handle<AnimationGraph>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum BeaverAction {
-    Idle,
-    Walk,
-    Jump,
-    Eat,
-}
-
-impl BeaverAction {
-    pub fn animation_index(&self) -> usize {
-        match self {
-            Self::Idle => 9,
-            Self::Walk => 18,
-            Self::Jump => 12,
-            Self::Eat => 5,
-        }
-    }
-
-    pub fn should_repeat(&self) -> bool {
-        matches!(self, Self::Walk | Self::Idle)
-    }
-
-    pub fn duration(&self) -> Option<f32> {
-        match self {
-            Self::Jump => Some(1.0), // Adjust based on your animation length
-            Self::Eat => Some(1.5),  // Adjust based on your animation length
-            _ => None,
-        }
-    }
-}
-
-#[derive(Debug, Component, PartialEq, Clone, Copy)]
-struct CurrentAction {
-    action: BeaverAction,
-}
-
-#[derive(Message)]
-struct TriggerAnimation {
-    entity: Entity,
-    action: BeaverAction,
-    force_replay: bool,
-}
-
-#[derive(Debug, Component)]
-struct PlayerAnimator {
-    idle_timer: Timer,
-    action_timer: Option<Timer>, // For one-shot animations
-}
-
-#[derive(Debug, Component)]
-struct PlayerMovement {
-    rotation: Quat,
-    target_translation: Vec3,
-    speed: f32,
-}
+mod beaver;
+mod board;
+use beaver::actions::*;
+use beaver::animation;
+use board::Game;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -93,12 +25,12 @@ struct BonusSpawnTimer(Timer);
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .init_resource::<Game>()
+        .init_resource::<board::Game>()
         .insert_resource(BonusSpawnTimer(Timer::from_seconds(
             5.0,
             TimerMode::Repeating,
         )))
-        .add_message::<TriggerAnimation>()
+        .add_message::<beaver::animation::TriggerAnimation>()
         .init_state::<GameState>()
         .add_systems(Startup, setup_cameras)
         .add_systems(OnEnter(GameState::Playing), setup)
@@ -106,11 +38,11 @@ fn main() {
             Update,
             (
                 move_player,
-                handle_animation_events,
-                tick_timers,
-                check_idle_state,
-                control_player_animation,
-                smooth_player_movement,
+                animation::handle_animation_events,
+                animation::tick_timers,
+                animation::check_idle_state,
+                animation::control_player_animation,
+                animation::smooth_player_movement,
                 focus_camera,
                 rotate_bonus,
                 scoreboard_system,
@@ -132,14 +64,6 @@ struct Cell {
 }
 
 #[derive(Default)]
-struct Beaver {
-    entity: Option<Entity>,
-    i: usize,
-    j: usize,
-    move_cooldown: Timer,
-}
-
-#[derive(Default)]
 struct Bonus {
     entity: Option<Entity>,
     i: usize,
@@ -147,38 +71,18 @@ struct Bonus {
     handle: Handle<Scene>,
 }
 
-#[derive(Resource, Default)]
-struct Game {
-    board: Vec<Vec<Cell>>,
-    player: Beaver,
-    bonus: Bonus,
-    score: i32,
-    cake_eaten: u32,
-    camera_should_focus: Vec3,
-    camera_is_focus: Vec3,
-}
-
 #[derive(Resource, Deref, DerefMut)]
 struct Random(ChaCha8Rng);
 
-const BOARD_SIZE_I: usize = 5;
-const BOARD_SIZE_J: usize = 5;
-
-const RESET_FOCUS: [f32; 3] = [
-    BOARD_SIZE_I as f32 / 2.0,
-    0.0,
-    BOARD_SIZE_J as f32 / 2.0 - 0.5,
-];
-
 fn setup_cameras(mut commands: Commands, mut game: ResMut<Game>) {
-    game.camera_should_focus = Vec3::from(RESET_FOCUS);
+    game.camera_should_focus = Vec3::from(board::RESET_FOCUS);
     game.camera_is_focus = game.camera_should_focus;
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(
-            -(BOARD_SIZE_I as f32 / 2.0),
-            2.0 * BOARD_SIZE_J as f32 / 3.0,
-            BOARD_SIZE_J as f32 / 2.0 - 0.5,
+            -(board::SIZE_I as f32 / 2.0),
+            2.0 * board::SIZE_J as f32 / 3.0,
+            board::SIZE_J as f32 / 2.0 - 0.5,
         )
         .looking_at(game.camera_is_focus, Vec3::Y),
     ));
@@ -187,22 +91,14 @@ fn setup_cameras(mut commands: Commands, mut game: ResMut<Game>) {
 fn setup(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut game: ResMut<Game>,
     mut graphs: ResMut<Assets<AnimationGraph>>,
+    mut game: ResMut<Game>,
 ) {
-    let (graph, _) = AnimationGraph::from_clips((0..=17).map(|i| {
-        asset_server
-            .load(GltfAssetLabel::Animation(i).from_asset("models/beaver/beaver_animations.glb"))
-    }));
-
     let rng = ChaCha8Rng::from_os_rng();
 
     // reset the game state
     game.cake_eaten = 0;
     game.score = 0;
-    game.player.i = BOARD_SIZE_I / 2;
-    game.player.j = BOARD_SIZE_J / 2;
-    game.player.move_cooldown = Timer::from_seconds(MOVE_DURATION, TimerMode::Once);
 
     commands.spawn((
         DespawnOnExit(GameState::Playing),
@@ -221,9 +117,9 @@ fn setup(
 
     let big_block =
         asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/ground_riverStraight.glb"));
-    game.board = (0..BOARD_SIZE_J)
+    game.board = (0..board::SIZE_J)
         .map(|j| {
-            (0..BOARD_SIZE_I)
+            (0..board::SIZE_I)
                 .map(|i| {
                     if j % 16 == 0 {
                         commands.spawn((
@@ -244,46 +140,7 @@ fn setup(
         })
         .collect();
 
-    game.player.entity = Some(
-        commands
-            .spawn((
-                DespawnOnExit(GameState::Playing),
-                AnimationToPlay {
-                    graph_handle: graphs.add(graph),
-                },
-                CurrentAction {
-                    action: BeaverAction::Idle,
-                },
-                PlayerAnimator {
-                    idle_timer: Timer::from_seconds(MOVE_DURATION, TimerMode::Once),
-                    action_timer: None,
-                },
-                PlayerMovement {
-                    target_translation: Vec3::new(
-                        game.player.i as f32,
-                        game.board[game.player.j][game.player.i].height,
-                        game.player.j as f32,
-                    ),
-                    speed: MOVE_SPEED,
-                    rotation: dir_as_quat(BEAVER_DOWN),
-                },
-                Transform {
-                    translation: Vec3::new(
-                        game.player.i as f32,
-                        game.board[game.player.j][game.player.i].height,
-                        game.player.j as f32,
-                    ),
-                    rotation: dir_as_quat(BEAVER_DOWN),
-                    ..default()
-                },
-                SceneRoot(asset_server.load(
-                    GltfAssetLabel::Scene(0).from_asset("models/beaver/beaver_animations.glb"),
-                )),
-            ))
-            .observe(play_animation_when_ready)
-            .id(),
-    );
-
+    board::spawn_beaver(&mut game, &mut commands, &mut graphs, &asset_server);
     game.bonus.handle =
         asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/tree_oak.glb"));
 
@@ -311,8 +168,8 @@ fn move_player(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut game: ResMut<Game>,
     mut query: Query<(&Transform, &mut PlayerMovement)>,
-    mut anim_state_query: Query<&mut PlayerAnimator>,
-    mut anim_events: MessageWriter<TriggerAnimation>,
+    mut anim_state_query: Query<&mut animation::PlayerAnimator>,
+    mut anim_events: MessageWriter<animation::TriggerAnimation>,
     time: Res<Time>,
 ) {
     if game.player.move_cooldown.tick(time.delta()).is_finished() {
@@ -330,7 +187,7 @@ fn move_player(
         // Jump with spacebar
         if keyboard_input.just_pressed(KeyCode::Space) {
             action = BeaverAction::Jump;
-            anim_events.write(TriggerAnimation {
+            anim_events.write(animation::TriggerAnimation {
                 entity: game.player.entity.unwrap(),
                 action,
                 force_replay: true,
@@ -339,7 +196,7 @@ fn move_player(
         }
 
         if keyboard_input.pressed(KeyCode::ArrowUp) {
-            if game.player.i < BOARD_SIZE_I - 1 {
+            if game.player.i < board::SIZE_I - 1 {
                 game.player.i += 1;
             }
             rotation = BEAVER_UP;
@@ -353,7 +210,7 @@ fn move_player(
             action = BeaverAction::Walk;
             moved = true;
         } else if keyboard_input.pressed(KeyCode::ArrowRight) {
-            if game.player.j < BOARD_SIZE_J - 1 {
+            if game.player.j < board::SIZE_J - 1 {
                 game.player.j += 1;
             }
             rotation = BEAVER_RIGHT;
@@ -384,7 +241,7 @@ fn move_player(
                 anim_state.idle_timer.reset();
             }
 
-            anim_events.write(TriggerAnimation {
+            anim_events.write(animation::TriggerAnimation {
                 entity: game.player.entity.unwrap(),
                 action,
                 force_replay: false,
@@ -403,113 +260,11 @@ fn move_player(
         game.bonus.entity = None;
 
         // Trigger eat animation
-        anim_events.write(TriggerAnimation {
+        anim_events.write(animation::TriggerAnimation {
             entity: game.player.entity.unwrap(),
             action: BeaverAction::Eat,
             force_replay: true,
         });
-    }
-}
-
-fn handle_animation_events(
-    mut events: MessageReader<TriggerAnimation>,
-    mut query: Query<(&mut CurrentAction, &mut PlayerAnimator)>,
-) {
-    for event in events.read() {
-        if let Ok((mut action, mut animator)) = query.get_mut(event.entity) {
-            // Always update if force_replay is true, otherwise only if different
-            if event.force_replay || action.action != event.action {
-                action.action = event.action;
-
-                // Set action timer for one-shot animations
-                if let Some(duration) = event.action.duration() {
-                    animator.action_timer = Some(Timer::from_seconds(duration, TimerMode::Once));
-                } else {
-                    animator.action_timer = None;
-                }
-            }
-        }
-    }
-}
-
-fn tick_timers(time: Res<Time>, mut query: Query<&mut PlayerAnimator>) {
-    for mut animator in query.iter_mut() {
-        animator.idle_timer.tick(time.delta());
-        if let Some(ref mut timer) = animator.action_timer {
-            timer.tick(time.delta());
-        }
-    }
-}
-
-fn check_idle_state(
-    query: Query<(Entity, &CurrentAction, &PlayerAnimator)>,
-    mut anim_events: MessageWriter<TriggerAnimation>,
-) {
-    for (entity, current_action, anim_state) in query.iter() {
-        match current_action.action {
-            // Walk -> Idle when timer finishes
-            BeaverAction::Walk => {
-                if anim_state.idle_timer.is_finished() {
-                    anim_events.write(TriggerAnimation {
-                        entity,
-                        action: BeaverAction::Idle,
-                        force_replay: false,
-                    });
-                }
-            }
-            // Jump/Eat -> Idle when action timer finishes
-            BeaverAction::Jump | BeaverAction::Eat => {
-                if let Some(ref timer) = anim_state.action_timer {
-                    if timer.is_finished() {
-                        anim_events.write(TriggerAnimation {
-                            entity,
-                            action: BeaverAction::Idle,
-                            force_replay: false,
-                        });
-                    }
-                }
-            }
-            BeaverAction::Idle => {}
-        }
-    }
-}
-
-fn smooth_player_movement(time: Res<Time>, mut query: Query<(&mut Transform, &PlayerMovement)>) {
-    for (mut transform, movement) in query.iter_mut() {
-        transform.rotation = movement.rotation;
-
-        let direction = movement.target_translation - transform.translation;
-        let distance = direction.length();
-
-        if distance > 0.01 {
-            let move_distance = movement.speed * time.delta_secs();
-            if move_distance >= distance {
-                transform.translation = movement.target_translation;
-            } else {
-                transform.translation += direction.normalize() * move_distance;
-            }
-        }
-    }
-}
-
-fn control_player_animation(
-    query: Query<(Entity, &CurrentAction), Changed<CurrentAction>>,
-    children: Query<&Children>,
-    mut players: Query<&mut AnimationPlayer>,
-) {
-    for (entity, current_action) in query.iter() {
-        for child in children.iter_descendants(entity) {
-            if let Ok(mut player) = players.get_mut(child) {
-                let target_index = AnimationNodeIndex::new(current_action.action.animation_index());
-
-                player.stop_all();
-                let anim = player.play(target_index);
-
-                if current_action.action.should_repeat() {
-                    anim.repeat();
-                }
-            }
-        }
     }
 }
 
@@ -534,7 +289,7 @@ fn focus_camera(
             game.camera_should_focus = player_transform.translation;
         }
     } else {
-        game.camera_should_focus = Vec3::from(RESET_FOCUS);
+        game.camera_should_focus = Vec3::from(board::RESET_FOCUS);
     }
 
     let mut camera_motion = game.camera_should_focus - game.camera_is_focus;
@@ -571,8 +326,8 @@ fn spawn_bonus(
     }
 
     loop {
-        game.bonus.i = rng.random_range(0..BOARD_SIZE_I);
-        game.bonus.j = rng.random_range(0..BOARD_SIZE_J);
+        game.bonus.i = rng.random_range(0..board::SIZE_I);
+        game.bonus.j = rng.random_range(0..board::SIZE_J);
         if game.bonus.i != game.player.i || game.bonus.j != game.player.j {
             break;
         }
@@ -643,24 +398,4 @@ fn display_score(mut commands: Commands, game: Res<Game>) {
             TextColor(Color::srgb(0.5, 0.5, 1.0)),
         )],
     ));
-}
-
-fn play_animation_when_ready(
-    scene_ready: On<SceneInstanceReady>,
-    mut commands: Commands,
-    children: Query<&Children>,
-    animations_to_play: Query<&AnimationToPlay>,
-    mut players: Query<&mut AnimationPlayer>,
-) {
-    if let Ok(animation_to_play) = animations_to_play.get(scene_ready.entity) {
-        for child in children.iter_descendants(scene_ready.entity) {
-            if let Ok(mut player) = players.get_mut(child) {
-                player.play(AnimationNodeIndex::new(0)).repeat();
-
-                commands
-                    .entity(child)
-                    .insert(AnimationGraphHandle(animation_to_play.graph_handle.clone()));
-            }
-        }
-    }
 }
