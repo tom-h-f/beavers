@@ -2,8 +2,8 @@ use crate::*;
 
 pub mod tile;
 
-pub const SIZE_I: usize = 24;
-pub const SIZE_J: usize = 24;
+pub const SIZE_I: usize = 8;
+pub const SIZE_J: usize = 8;
 
 pub const RESET_FOCUS: [f32; 3] = [SIZE_I as f32 / 2.0, 0.0, SIZE_J as f32 / 2.0 - 0.5];
 
@@ -24,25 +24,43 @@ pub fn spawn_world(
     asset_server: &Res<AssetServer>,
 ) {
     // TODO: just load these into a loader or some storage of this
-    let cell_scene = board::tile::Tile::GroundGrass.load(asset_server);
-    let big_block = board::tile::Tile::GroundPathTile.load(asset_server);
+    let ground_grass = board::tile::Tile::GroundGrass.load(asset_server);
+    let river_side = board::tile::Tile::GroundRiverSide.load(asset_server);
+    let river_open = board::tile::Tile::GroundRiverOpen.load(asset_server);
 
     game.board = (0..board::SIZE_J)
         .map(|j| {
             (0..board::SIZE_I)
                 .map(|i| {
-                    if j % 16 == 0 {
+                    let x = board::SIZE_I / 2;
+                    if x == i {
                         commands.spawn((
                             DespawnOnExit(GameState::Playing),
-                            Transform::from_xyz(i as f32, 0.0, j as f32),
-                            SceneRoot(big_block.clone()),
+                            Transform::from_xyz(i as f32, 0.0 as f32, j as f32),
+                            SceneRoot(river_open.clone()),
+                        ));
+                    } else if x == i.wrapping_sub(1) {
+                        commands.spawn((
+                            DespawnOnExit(GameState::Playing),
+                            Transform::from_translation(Vec3::new(i as f32, 0.0, j as f32))
+                                .with_rotation(Quat::from_rotation_y(-std::f32::consts::FRAC_PI_2)),
+                            SceneRoot(river_side.clone()),
+                        ));
+                    } else if x == i + 1 {
+                        commands.spawn((
+                            DespawnOnExit(GameState::Playing),
+                            Transform::from_translation(Vec3::new(i as f32, 0.0, j as f32))
+                                .with_rotation(Quat::from_rotation_y(std::f32::consts::FRAC_PI_2)),
+                            SceneRoot(river_side.clone()),
                         ));
                     } else {
+                        println!("NOT hit {i}");
                         commands.spawn((
                             DespawnOnExit(GameState::Playing),
                             Transform::from_xyz(i as f32, 0.0, j as f32),
-                            SceneRoot(cell_scene.clone()),
+                            SceneRoot(ground_grass.clone()),
                         ));
+                        info!("dog");
                     }
                     Cell { height: 0.0 }
                 })
@@ -50,7 +68,6 @@ pub fn spawn_world(
         })
         .collect();
 }
-
 pub fn spawn_beaver(
     game: &mut ResMut<Game>,
     commands: &mut Commands,
