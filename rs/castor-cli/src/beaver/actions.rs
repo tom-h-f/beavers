@@ -34,8 +34,8 @@ impl BeaverAction {
 
     pub fn duration(&self) -> Option<f32> {
         match self {
-            Self::Jump => Some(1.0), // Adjust based on your animation length
-            Self::Eat => Some(1.5),  // Adjust based on your animation length
+            Self::Jump => Some(0.4),
+            Self::Eat => Some(0.1),
             _ => None,
         }
     }
