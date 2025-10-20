@@ -2,7 +2,10 @@
 
 ## TODOs
 
+
 - Generate semi-good terrain, procgen with some kind of river situation. - implement this perhaps: https://rtouti.github.io/graphics/perlin-noise-algorithm
+
+- Create an actual terrain management structure.
 
 - Split each tile into  9 sub-tiles. So beavers can navigate the world or they will be very outscaled of it
 
@@ -10,7 +13,9 @@
 
 - World State - Tree/dam/other health/data
 
-- Actually blend the animations https://bevy.org/examples/animation/animation-graph/
+- Actually blend beaver animations https://bevy.org/examples/animation/animation-graph/
+
+
 
 
 
