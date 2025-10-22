@@ -1,22 +1,22 @@
+use std::fmt::Debug;
+
 use crate::*;
 
-impl Model {
-    pub fn load(&self, asset_server: &Res<AssetServer>) -> Handle<Scene> {
-        asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("models/{:?}.glb", self)))
-    }
+pub trait BeaversAsset {}
+
+impl BeaversAsset for ModelAsset {}
+impl BeaversAsset for TileAsset {}
+
+pub fn get_asset<A: BeaversAsset + Debug>(a: A, asset_server: &Res<AssetServer>) -> Handle<Scene> {
+    asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("models/{:?}.glb", a)))
 }
 
-impl Tile {
-    pub fn load(&self, asset_server: &Res<AssetServer>) -> Handle<Scene> {
-        asset_server.load(GltfAssetLabel::Scene(0).from_asset(format!("models/{:?}.glb", self)))
-    }
-}
 /// TODO: move various parts of this to their own thing
 /// we need a types for model/decor (for like tree, bed, rock etc)
 /// and i guess beaver + animations etc
 #[allow(dead_code)]
-#[derive(Debug, Clone, Copy)]
-pub enum Model {
+#[derive(Debug, Default, Clone, Copy)]
+pub enum ModelAsset {
     Bed,
     BedFloor,
     BridgeCenterStone,
@@ -317,12 +317,14 @@ pub enum Model {
     TreeThin,
     TreeThinDark,
     TreeThinFall,
+    #[default]
+    Unreachable,
 }
 
 // TODO: this isnt actually really a tile...
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy)]
-pub enum Tile {
+pub enum TileAsset {
     GroundGrass,
     GroundPathBend,
     GroundPathBendBank,

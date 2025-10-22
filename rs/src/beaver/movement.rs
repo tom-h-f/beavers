@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use crate::*;
 
 pub type BeaverDirection = f32;
@@ -50,7 +51,6 @@ pub fn accumulate_input(
     player: Single<(&mut AccumulatedInput, &mut Velocity, &Transform)>,
 ) {
     /// Bevy uses SI units so this is in metres per second
-    const SPEED: f32 = 1.5;
     let (mut input, mut velocity, transform) = player.into_inner();
     // Reset the input to zero before reading the new input. As mentioned above, we can only do this
     // because this is continuously pressed by the user. Do not reset e.g. whether the user wants to boost.
@@ -83,7 +83,7 @@ pub fn accumulate_input(
     // diagonal movement would be faster than horizontal or vertical movement.
     // We use `clamp_length_max` instead of `.normalize_or_zero()` because gamepad input
     // may be smaller than 1.0 when the player is pushing the stick just a little bit.
-    velocity.0 = rotated_input.clamp_length_max(1.0) * SPEED;
+    velocity.0 = rotated_input.clamp_length_max(1.0) * super::MOVE_SPEED;
 }
 
 /// Advance the physics simulation by one fixed timestep. This may run zero or multiple times per frame.

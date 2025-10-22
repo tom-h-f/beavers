@@ -1,6 +1,6 @@
 use crate::{
     beaver::movement::{BEAVER_DOWN, BEAVER_UP, dir_as_quat},
-    board::{Board, SIZE_I, SIZE_J},
+    board::{BOARD_HEIGHT, BOARD_WIDTH, Board},
     *,
 };
 
@@ -10,6 +10,7 @@ pub mod movement;
 
 pub const MOVE_SPEED: f32 = 2.0;
 
+#[allow(dead_code)]
 #[derive(Default, Debug, Component)]
 pub struct Beaver {
     pub name: String,
@@ -17,7 +18,10 @@ pub struct Beaver {
 }
 
 pub fn beaver_plugin(app: &mut App) {
-    app.add_systems(Startup, beaver::create_the_beavers.after(crate::setup));
+    app.add_systems(
+        Startup,
+        beaver::create_the_beavers.after(crate::board::render_world),
+    );
     app.add_systems(FixedUpdate, movement::advance_physics);
     app.add_systems(
         // The `RunFixedMainLoop` schedule allows us to schedule systems to run before and after the fixed timestep loop.
@@ -57,8 +61,8 @@ pub fn create_the_beavers(
     // TODO make a smarter system to work out
     // where to spawn the beaver(s)
 
-    let spawn_loc_i = SIZE_I / 2;
-    let spawn_loc_j = SIZE_J / 2;
+    let spawn_loc_i = BOARD_WIDTH / 2;
+    let spawn_loc_j = BOARD_HEIGHT / 2;
 
     let beaver_id =
         commands
@@ -69,9 +73,11 @@ pub fn create_the_beavers(
                 },
                 DespawnOnExit(SimState::Playing),
                 Transform {
+                    // TODO make the y match the level its actually at
                     translation: Vec3::new(
                         spawn_loc_i as f32,
-                        board.board[spawn_loc_j][spawn_loc_j].height,
+                        //board.board[0][spawn_loc_j][spawn_loc_j],
+                        0.0,
                         spawn_loc_j as f32,
                     ),
                     rotation: dir_as_quat(BEAVER_UP),

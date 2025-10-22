@@ -52,15 +52,11 @@ fn main() {
             },
         ))
         .init_resource::<BeaverWorld>()
-        .init_resource::<Board>()
+        .add_plugins(board::board_plugin)
         .add_plugins(beaver::beaver_plugin)
         .init_state::<SimState>()
         .add_systems(Startup, (setup_cameras, setup))
         .run();
-}
-
-struct Cell {
-    height: f32,
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -84,6 +80,4 @@ pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>, mut board: 
         },
         Transform::from_xyz(4.0, 10.0, 4.0),
     ));
-
-    board::generate_terrain(&mut board, &mut commands, &asset_server);
 }
