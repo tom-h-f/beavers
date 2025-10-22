@@ -31,6 +31,8 @@ Good code to read from: https://bevy.org/examples/games/alien-cake-addict/
 proced. code to copy for terrain gen?
 https://github.com/bones-ai/rust-procedural-world/blob/main/src/terrain.rs
 
+Fantastic physics code: https://bevy.org/examples/movement/physics-in-fixed-timestep/
+
 ## UI
 - Sounds:  https://kenney.nl/assets/interface-sounds
 - Emotes: https://kenney.nl/assets/emotes-pack (Good for showing action of a beaver?)

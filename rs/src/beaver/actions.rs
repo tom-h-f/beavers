@@ -1,17 +1,6 @@
-use crate::*;
-
-pub type BeaverDirection = f32;
-pub const BEAVER_UP: BeaverDirection = PI / 2.;
-pub const BEAVER_DOWN: BeaverDirection = -PI / 2.;
-pub const BEAVER_LEFT: BeaverDirection = PI;
-pub const BEAVER_RIGHT: BeaverDirection = 0.;
-
-pub fn dir_as_quat(dir: BeaverDirection) -> Quat {
-    Quat::from_rotation_y(dir)
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum BeaverAction {
+    #[default]
     Idle,
     Walk,
     Jump,
@@ -39,16 +28,4 @@ impl BeaverAction {
             _ => None,
         }
     }
-}
-
-#[derive(Debug, Component, PartialEq, Clone, Copy)]
-pub struct CurrentAction {
-    pub action: BeaverAction,
-}
-
-#[derive(Debug, Component)]
-pub struct PlayerMovement {
-    pub rotation: Quat,
-    pub target_translation: Vec3,
-    pub speed: f32,
 }
