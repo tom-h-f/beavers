@@ -2,6 +2,9 @@
 
 ## TODOs
 
+- ACTUALLY read through bevy docs in-depth. Work out what systems, entities, messages, components, resources DO and where and WHY we should use them.
+
+- Play audio when doing actions
 
 - Generate semi-good terrain, procgen with some kind of river situation. - implement this perhaps: https://rtouti.github.io/graphics/perlin-noise-algorithm
 
@@ -63,3 +66,13 @@ wasm-opt -Os --output output.wasm input.wasm
 ```
 https://bevy.org/learn/quick-start/getting-started/setup/ go to 'Advanced wasm optimizations'
 
+## Future Planned Features
+
+### AI Interop
+
+I should be able to perform the observation retreival and action instruction via the bevy remote plugin which
+they natively provide: https://docs.rs/bevy/latest/bevy/remote/index.html
+
+### Interaction
+
+While we *do* intend for this to be a non-interactive simulation, it might be fun to add a feature where a user can interact with the world and watch the agents interact, such as a meteor strike, giving them a huge cake to eat, or other silly things.

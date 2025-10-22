@@ -1,17 +1,22 @@
+use rand::SeedableRng;
+use rand_chacha::ChaCha8Rng;
 use std::f32::consts::PI;
+use std::time::Duration;
 
 use beaver::Beaver;
-pub use bevy::prelude::*;
-use bevy::scene::SceneInstanceReady;
-
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
+use beaver::actions::*;
+use beaver::animation;
+pub use bevy::{
+    dev_tools::fps_overlay::{FpsOverlayConfig, FpsOverlayPlugin, FrameTimeGraphConfig},
+    prelude::*,
+    scene::SceneInstanceReady,
+    text::FontSmoothing,
+};
+use board::Game;
 
 mod beaver;
 mod board;
-use beaver::actions::*;
-use beaver::animation;
-use board::Game;
+mod diag;
 
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, Default, States)]
 enum GameState {
@@ -20,21 +25,33 @@ enum GameState {
     GameOver,
 }
 
-#[derive(Resource)]
-struct BonusSpawnTimer(Timer);
-
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
+        .add_plugins((
+            DefaultPlugins,
+            FpsOverlayPlugin {
+                config: FpsOverlayConfig {
+                    text_config: TextFont {
+                        font_size: 21.0,
+                        ..default()
+                    },
+                    refresh_interval: Duration::from_millis(100),
+                    text_color: Color::srgb(0.0, 1.0, 0.0),
+                    enabled: true,
+                    frame_time_graph_config: FrameTimeGraphConfig {
+                        enabled: true,
+                        // The minimum acceptable fps
+                        min_fps: 30.0,
+                        // The target fps
+                        target_fps: 144.0,
+                    },
+                },
+            },
+        ))
         .init_resource::<board::Game>()
-        .insert_resource(BonusSpawnTimer(Timer::from_seconds(
-            5.0,
-            TimerMode::Repeating,
-        )))
         .add_message::<beaver::animation::TriggerAnimation>()
         .init_state::<GameState>()
-        .add_systems(Startup, setup_cameras)
-        .add_systems(OnEnter(GameState::Playing), setup)
+        .add_systems(Startup, (setup_cameras, setup))
         .add_systems(
             Update,
             (
@@ -44,7 +61,6 @@ fn main() {
                 animation::check_idle_state,
                 animation::control_player_animation,
                 animation::smooth_player_movement,
-                focus_camera,
             )
                 .chain()
                 .run_if(in_state(GameState::Playing)),
@@ -54,14 +70,6 @@ fn main() {
 
 struct Cell {
     height: f32,
-}
-
-#[derive(Default)]
-struct Bonus {
-    entity: Option<Entity>,
-    i: usize,
-    j: usize,
-    handle: Handle<Scene>,
 }
 
 #[derive(Resource, Deref, DerefMut)]
@@ -85,7 +93,6 @@ fn setup(
     let rng = ChaCha8Rng::from_os_rng();
 
     // reset the game state
-    game.cake_eaten = 0;
     game.score = 0;
 
     commands.spawn((
@@ -188,40 +195,5 @@ fn move_player(
                 force_replay: false,
             });
         }
-    }
-}
-
-fn focus_camera(
-    time: Res<Time>,
-    mut game: ResMut<Game>,
-    mut transforms: ParamSet<(Query<&mut Transform, With<Camera3d>>, Query<&Transform>)>,
-) {
-    const SPEED: f32 = 2.0;
-    if let (Some(player_entity), Some(bonus_entity)) = (game.player.entity, game.bonus.entity) {
-        let transform_query = transforms.p1();
-        if let (Ok(player_transform), Ok(bonus_transform)) = (
-            transform_query.get(player_entity),
-            transform_query.get(bonus_entity),
-        ) {
-            game.camera_should_focus = player_transform
-                .translation
-                .lerp(bonus_transform.translation, 0.5);
-        }
-    } else if let Some(player_entity) = game.player.entity {
-        if let Ok(player_transform) = transforms.p1().get(player_entity) {
-            game.camera_should_focus = player_transform.translation;
-        }
-    } else {
-        game.camera_should_focus = Vec3::from(board::RESET_FOCUS);
-    }
-
-    let mut camera_motion = game.camera_should_focus - game.camera_is_focus;
-    if camera_motion.length() > 0.2 {
-        camera_motion *= SPEED * time.delta_secs();
-        game.camera_is_focus += camera_motion;
-    }
-
-    for mut transform in transforms.p0().iter_mut() {
-        *transform = transform.looking_at(game.camera_is_focus, Vec3::Y);
     }
 }

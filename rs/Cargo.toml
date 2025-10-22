@@ -1,20 +1,12 @@
-[workspace]
-members = [ "castor-cli","castor-core"
-, "castor-enviroments"]
-resolver = "2"
-
-
-[workspace.package]
+[package]
+name = "beavrs"
+version = "0.1.0"
 edition = "2024"
-license = "MIT"
-authors = ["Tom French"]
 
+[dependencies]
+bevy = { version = "0.17.2", features = ["shader_format_glsl", "bevy_dev_tools"]}
+rand = "0.9.2"
+rand_chacha = "0.9.0"
 
-# Enable a small amount of optimization in the dev profile.
-[profile.dev]
-opt-level = 1
-
-# Enable a large amount of optimization in the dev profile for dependencies.
-[profile.dev.package."*"]
-opt-level = 3
-
+[target.wasm32-unknown-unknown.dependencies]
+bevy = { version = "0.17.2", features = ["webgpu","web", "web_asset_cache"]}

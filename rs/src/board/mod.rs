@@ -11,9 +11,7 @@ pub const RESET_FOCUS: [f32; 3] = [SIZE_I as f32 / 2.0, 0.0, SIZE_J as f32 / 2.0
 pub struct Game {
     pub board: Vec<Vec<Cell>>,
     pub player: Beaver,
-    pub bonus: Bonus,
     pub score: i32,
-    pub cake_eaten: u32,
     pub camera_should_focus: Vec3,
     pub camera_is_focus: Vec3,
 }
@@ -54,13 +52,11 @@ pub fn spawn_world(
                             SceneRoot(river_side.clone()),
                         ));
                     } else {
-                        println!("NOT hit {i}");
                         commands.spawn((
                             DespawnOnExit(GameState::Playing),
                             Transform::from_xyz(i as f32, 0.0, j as f32),
                             SceneRoot(ground_grass.clone()),
                         ));
-                        info!("dog");
                     }
                     Cell { height: 0.0 }
                 })

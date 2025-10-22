@@ -5,7 +5,7 @@ pub mod animation;
 
 pub const MOVE_SPEED: f32 = 2.0;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Component)]
 pub struct Beaver {
     pub entity: Option<Entity>,
     pub i: usize,
